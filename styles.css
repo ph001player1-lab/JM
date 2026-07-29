@@ -226,8 +226,7 @@ p{ margin:0; }
   -webkit-background-clip:text; background-clip:text;
   color:transparent;
 }
-.hero-sub{ color:var(--muted); margin-top:22px; max-width:52ch; font-size:1.05rem; }
-.hero-cta{ display:flex; flex-wrap:wrap; gap:14px; margin-top:34px; }
+.hero-cta{ display:flex; flex-wrap:wrap; gap:14px; margin-top:38px; }
 
 .hero-trust{
   display:flex; flex-wrap:wrap; gap:14px 34px;
@@ -308,11 +307,7 @@ input[type=range]::-moz-range-thumb{
 .section{ padding:clamp(72px, 9vw, 126px) 0; }
 .section.alt{ background:var(--jet-2); border-block:1px solid var(--line-soft); }
 
-/* ---------------- 10. План зала ---------------- */
-.floor{ padding:clamp(60px, 7vw, 100px) 0; }
-.floor-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:34px; }
-.floor-head h2{ max-width:16ch; }
-
+/* ---------------- 10. Сегментные переключатели ---------------- */
 .seg{
   display:inline-flex; gap:3px; padding:4px;
   border:1px solid var(--line); border-radius:100px; background:rgba(255,255,255,.02);
@@ -327,69 +322,7 @@ input[type=range]::-moz-range-thumb{
 .seg-btn:hover{ color:var(--text); }
 .seg-btn.is-active{ background:rgba(24,123,255,.22); color:var(--electric); }
 .seg-season{ margin-top:26px; }
-
-.floor-map{
-  display:grid; grid-template-columns:repeat(auto-fill, minmax(58px, 1fr)); gap:10px;
-  padding:24px; min-height:150px;
-  border:1px solid var(--line); border-radius:var(--r-l);
-  background:
-    radial-gradient(80% 130% at 50% -10%, rgba(24,123,255,.14), transparent 62%),
-    rgba(255,255,255,.02);
-}
-.tbl{
-  aspect-ratio:1; border-radius:14px;
-  display:grid; place-items:center;
-  font-family:var(--display); font-weight:700; font-size:.7rem;
-  font-variant-numeric:tabular-nums; color:var(--electric);
-  background:linear-gradient(180deg, rgba(24,123,255,.26), rgba(24,123,255,.07));
-  border:1px solid rgba(70,199,255,.3);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
-  animation:tblIn .38s var(--ease) both;
-}
-@keyframes tblIn{ from{ opacity:0; transform:scale(.72); } to{ opacity:1; transform:scale(1); } }
-
-.floor-stats{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:18px; }
-.stat{ padding:22px; border:1px solid var(--line); border-radius:var(--r-m); background:rgba(255,255,255,.025); }
-.stat-label{ font-size:.82rem; color:var(--muted); }
-.stat-value{ font-size:clamp(1.3rem, 2.6vw, 1.9rem); margin-top:10px; color:var(--electric); }
-.floor-note{ font-size:.78rem; color:var(--muted); margin-top:14px; opacity:.8; }
-
-/* ---------------- 11. Карточки «почему» ---------------- */
-.cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(258px, 1fr)); gap:14px; }
-.card{
-  padding:26px 24px 28px;
-  border:1px solid var(--line); border-radius:var(--r-l);
-  background:rgba(255,255,255,.025);
-  transition:transform .35s var(--ease), border-color .35s var(--ease), background-color .35s var(--ease);
-}
-.card:hover{ transform:translateY(-4px); border-color:rgba(70,199,255,.4); background:rgba(24,123,255,.08); }
-.card h3{ margin:18px 0 10px; }
-.card p{ font-size:.9rem; color:var(--muted); }
-
-/* Иконки собраны на CSS, чтобы не тянуть внешние файлы */
-.card-ico{
-  width:38px; height:38px; border-radius:12px; display:block; position:relative;
-  border:1px solid rgba(70,199,255,.32);
-  background:linear-gradient(180deg, rgba(24,123,255,.28), rgba(24,123,255,.06));
-}
-.card-ico::after{
-  content:""; position:absolute; inset:0; margin:auto;
-  width:15px; height:15px; background:var(--electric);
-}
-.card-ico[data-ico="ai"]::after{ width:12px; height:12px; border-radius:3px; transform:rotate(45deg); }
-.card-ico[data-ico="dessert"]::after{ border-radius:50% 50% 6px 6px; }
-.card-ico[data-ico="drink"]::after{ clip-path:polygon(0 0,100% 0,60% 60%,60% 100%,40% 100%,40% 60%); }
-.card-ico[data-ico="promo"]::after{ clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%); }
-.card-ico[data-ico="bell"]::after{ height:12px; border-radius:50% 50% 3px 3px; }
-.card-ico[data-ico="lang"]::after{ border-radius:50%; background:none; border:2px solid var(--electric); }
-.card-ico[data-ico="pay"]::after{ height:10px; border-radius:3px; }
-.card-ico[data-ico="star"]::after{ clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 100%,50% 74%,21% 100%,32% 57%,2% 35%,39% 35%); }
-.card-ico[data-ico="repeat"]::after{
-  background:none; border:2px solid var(--electric); border-radius:50%;
-  border-right-color:transparent; transform:rotate(-35deg);
-}
-
-/* ---------------- 12. Что получает ресторан ---------------- */
+/* ---------------- 11. Что получает ресторан ---------------- */
 .ops-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }
 .ops-card{
   padding:30px 26px;
@@ -429,24 +362,7 @@ input[type=range]::-moz-range-thumb{
   transform:rotate(-45deg);
 }
 
-/* ---------------- 13. Платформа ---------------- */
-.plat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(258px, 1fr)); gap:14px; }
-.plat-card{
-  padding:28px 24px;
-  border:1px solid var(--line); border-radius:var(--r-l);
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
-  transition:border-color .35s var(--ease), transform .35s var(--ease);
-}
-.plat-card:hover{ border-color:rgba(70,199,255,.42); transform:translateY(-4px); }
-.plat-k{
-  font-family:var(--display); font-weight:800;
-  font-size:.72rem; letter-spacing:.18em; text-transform:uppercase;
-  color:var(--electric); margin-bottom:18px;
-}
-.plat-card h3{ margin-bottom:10px; }
-.plat-card p{ font-size:.9rem; color:var(--muted); }
-
-/* ---------------- 14. Тарифы ---------------- */
+/* ---------------- 12. Тарифы ---------------- */
 .plans{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
 .plan{
   position:relative; padding:34px 30px 30px;
@@ -483,20 +399,7 @@ input[type=range]::-moz-range-thumb{
 }
 .plan-cta{ margin-top:auto; width:100%; }
 
-/* ---------------- 15. Как это работает ---------------- */
-.steps{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
-.step{
-  position:relative; padding:26px 24px 28px;
-  border:1px solid var(--line); border-radius:var(--r-l);
-  background:rgba(255,255,255,.022);
-}
-.step-n{ display:block; font-size:.76rem; letter-spacing:.1em; color:var(--electric); margin-bottom:16px; }
-.step h3{ margin-bottom:8px; }
-.step p{ font-size:.88rem; color:var(--muted); }
-.step::after{ content:""; position:absolute; right:-16px; top:50%; width:16px; height:1px; background:var(--line); }
-.step:nth-child(3n)::after, .step:last-child::after{ display:none; }
-
-/* ---------------- 16. FAQ ---------------- */
+/* ---------------- 13. FAQ ---------------- */
 .faq{ display:grid; gap:8px; }
 .qa{
   border:1px solid var(--line); border-radius:var(--r-m);
@@ -519,7 +422,7 @@ input[type=range]::-moz-range-thumb{
 .qa[open] summary::after{ transform:rotate(-135deg); margin-top:-2px; }
 .qa p{ padding:0 22px 22px; color:var(--muted); font-size:.94rem; max-width:66ch; }
 
-/* ---------------- 17. Форма ---------------- */
+/* ---------------- 14. Форма ---------------- */
 .request{ padding-bottom:clamp(80px, 10vw, 140px); }
 .req-card{ padding:clamp(28px, 4vw, 48px); }
 .req-head{ margin-bottom:24px; }
@@ -549,7 +452,7 @@ input[type=range]::-moz-range-thumb{
 .form-status.bad{ color:#FF8F9B; }
 .seg-type{ margin-bottom:4px; }
 
-/* ---------------- 18. Подвал ---------------- */
+/* ---------------- 15. Подвал ---------------- */
 .site-foot{ border-top:1px solid var(--line-soft); background:var(--jet-2); padding:56px 0 44px; }
 .foot-inner{ display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:32px; align-items:start; }
 .logo-foot{ height:30px; }
@@ -562,23 +465,18 @@ input[type=range]::-moz-range-thumb{
 .foot-links{ display:grid; gap:10px; font-size:.88rem; color:var(--muted); }
 .foot-links a:hover{ color:var(--electric); }
 .foot-contacts{ display:grid; gap:10px; font-size:.88rem; color:var(--muted); }
-.foot-contacts a:hover{ color:var(--electric); }
 .foot-rights{ margin-top:8px; opacity:.7; font-size:.8rem; }
 
-/* ---------------- 19. Появление при прокрутке ---------------- */
+/* ---------------- 16. Появление при прокрутке ---------------- */
 .reveal{ opacity:0; transform:translateY(22px); transition:opacity .7s var(--ease), transform .7s var(--ease); }
 .reveal.in{ opacity:1; transform:none; }
-.cards .reveal:nth-child(2), .plat-grid .reveal:nth-child(2), .steps .reveal:nth-child(2), .ops-grid .reveal:nth-child(2){ transition-delay:.06s; }
-.cards .reveal:nth-child(3), .plat-grid .reveal:nth-child(3), .steps .reveal:nth-child(3), .ops-grid .reveal:nth-child(3){ transition-delay:.12s; }
-.cards .reveal:nth-child(4), .plat-grid .reveal:nth-child(4), .steps .reveal:nth-child(4){ transition-delay:.18s; }
+.ops-grid .reveal:nth-child(2){ transition-delay:.06s; }
+.ops-grid .reveal:nth-child(3){ transition-delay:.12s; }
 
-/* ---------------- 20. Адаптив ---------------- */
+/* ---------------- 17. Адаптив ---------------- */
 @media (max-width: 1080px){
   .hero-grid{ grid-template-columns:1fr; }
   .hero-title{ max-width:18ch; }
-  .steps{ grid-template-columns:repeat(2, 1fr); }
-  .step:nth-child(3n)::after{ display:block; }
-  .step:nth-child(2n)::after{ display:none; }
 }
 
 @media (max-width: 860px){
@@ -601,12 +499,7 @@ input[type=range]::-moz-range-thumb{
 
   .arc{ top:120px; height:220px; }
   .plans{ grid-template-columns:1fr; }
-  .floor-stats{ grid-template-columns:1fr; }
-  .steps{ grid-template-columns:1fr; }
-  .step::after{ display:none !important; }
   .foot-inner{ grid-template-columns:1fr; gap:26px; }
-  .floor-map{ grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; padding:16px; }
-  .tbl{ font-size:.6rem; border-radius:11px; }
 }
 
 @media (max-width: 520px){
@@ -616,7 +509,7 @@ input[type=range]::-moz-range-thumb{
   .seg-btn{ padding:9px 14px; font-size:.8rem; }
 }
 
-/* ---------------- 21. Уважение к настройкам движения ---------------- */
+/* ---------------- 18. Уважение к настройкам движения ---------------- */
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior:auto; }
   *,*::before,*::after{
@@ -627,7 +520,7 @@ input[type=range]::-moz-range-thumb{
   .reveal{ opacity:1; transform:none; }
 }
 
-/* ---------------- 22. Печать ---------------- */
+/* ---------------- 19. Печать ---------------- */
 @media print{
   .site-head,.hero-bg,.seg,.lang,.btn{ display:none !important; }
   body{ background:#fff; color:#000; }

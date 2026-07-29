@@ -4,9 +4,9 @@
      1.  Настройки отправки заявок (Google Apps Script → Telegram)
      2.  Бизнес-константы расчёта
      3.  Словари переводов (RU / EN / TH)
-     4.  Утилиты (форматирование, анимация чисел)
+     4.  Утилиты (форматирование, анимация чисел, подстановка процентов)
      5.  Переключение языка
-     6.  Калькулятор прибыли + план зала
+     6.  Калькулятор прибыли
      7.  Тарифы (сезонный переключатель)
      8.  Форма заявки и транспорт до Telegram
      9.  Интерфейс: шапка, меню, появление блоков
@@ -20,16 +20,16 @@
    и отправляет сообщение в Telegram. Токен бота лежит в свойствах
    скрипта на стороне Google и в исходники сайта не попадает.
 
-   Что вставить сюда: URL веб-приложения, который выдаёт Apps Script
-   после «Развернуть → Новое развёртывание → Веб-приложение».
-   Он выглядит так: https://script.google.com/macros/s/AKfycb.../exec
+   Сюда вставляется URL веб-приложения, который выдаёт Apps Script
+   после «Развернуть → Новое развёртывание → Веб-приложение»:
+   https://script.google.com/macros/s/AKfycb.../exec
    Пошаговая настройка — в файле Code.gs и в README.
 
    Резервный путь (если Apps Script не используется): заполните
    BOT_TOKEN и CHAT_ID, тогда сайт обратится к Bot API напрямую.
-   Учтите, что на статическом хостинге токен виден всем посетителям.
+   На статическом хостинге токен при этом виден всем посетителям.
    ================================================================= */
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7yxV2TuO3Tat7WSIEZ81aTgHC_xmTK8UEL2d4wjh1AHK7b-kCXbdTS3-9XXd0kATSaw/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 
 const BOT_TOKEN = "";   // запасной вариант, обычно оставляем пустым
 const CHAT_ID   = "";   // запасной вариант, обычно оставляем пустым
@@ -37,17 +37,22 @@ const CHAT_ID   = "";   // запасной вариант, обычно ост�
 /* =================================================================
    2. БИЗНЕС-КОНСТАНТЫ
    ================================================================= */
-/* Прирост выручки по тарифам. Значения из ТЗ: Standard +10%, Premium +15%.
-   В брошюре «Цифровой официант» заявлен консервативный ориентир «+6% и более»
-   к среднему чеку — если хотите обещать меньше, а отдавать больше,
-   поставьте { std: 0.06, prm: 0.10 }: изменится вся страница разом. */
-const UPLIFT = { std: 0.06, prm: 0.15 };
+/* Прирост выручки по тарифам — единственное место, где живут эти цифры.
+   Отсюда считается калькулятор и подставляются все подписи с процентами:
+   «Standard +6%», «Premium +10%», «+6–10% к выручке зала».
+   Менять только здесь: разметку трогать не нужно.
+   Ориентир брошюры «Цифровой официант» — «+6% и более» к среднему чеку.
+   Значения из ТЗ, если вернётесь к ним: { std: 0.10, prm: 0.15 }. */
+const UPLIFT = { std: 0.06, prm: 0.10 };
+
+/* Снижение нагрузки на персонал. Подставляется в первый экран и в блок
+   «Что получает ресторан». В брошюре заявлено «−20% и более». */
+const STAFF_RELIEF = 0.20;
 
 const PRICE = {                                     // USD за устройство в месяц
   low:  { std: 10, prm: 20 },
   high: { std: 30, prm: 60 }
 };
-const USD_THB = 36;                                 // курс для расчёта окупаемости
 
 /* =================================================================
    3. СЛОВАРИ ПЕРЕВОДОВ
@@ -58,14 +63,13 @@ const I18N = {
 
   ru: {
     "meta.title": "JET MEDIA — цифровой официант для ресторанов. Дополнительная выручка без найма персонала",
-    "meta.desc": "JET MEDIA бесплатно устанавливает планшеты-официанты на столы ресторана: AI-апселл, мультиязычное меню, оплата, отзывы и аналитика. Первый месяц бесплатно.",
+    "meta.desc": "JET MEDIA устанавливает планшеты-официанты на столы ресторана: AI-апселл, мультиязычное меню, оплата со стола, отзывы и аналитика продаж.",
 
-    "nav.calc": "Калькулятор", "nav.why": "Как растёт чек", "nav.ops": "Возможности",
+    "nav.calc": "Калькулятор", "nav.ops": "Возможности",
     "nav.pricing": "Тарифы", "nav.faq": "Вопросы", "nav.cta": "Демонстрация",
 
-    "hero.eyebrow": "Пхукет · Цифровой официант на каждом столе",
+    "hero.eyebrow": "Цифровой официант на каждом столе",
     "hero.title1": "Дополнительная выручка", "hero.title2": "без найма персонала",
-    "hero.sub": "Мы бесплатно устанавливаем планшеты в ресторан. Первый месяц бесплатно. Со второго месяца оплачивается только аренда оборудования и обслуживание. Отказаться можно в любой момент.",
     "hero.ctaDemo": "Заказать демонстрацию", "hero.ctaInstall": "Заказать установку",
     "hero.t1": "к выручке зала", "hero.t2": "нагрузки на персонал", "hero.t3": "дня на запуск",
 
@@ -73,32 +77,6 @@ const I18N = {
     "calc.tables": "Количество столиков", "calc.guests": "Посетителей в месяц", "calc.check": "Средний чек",
     "calc.current": "Текущая выручка", "calc.standard": "Standard", "calc.premium": "Premium",
     "calc.note": "Расчёт по среднему приросту чека при работе AI-рекомендаций. Итог зависит от меню и сезона.",
-
-    "floor.eyebrow": "Ваш зал", "floor.title": "Каждый столик начинает продавать сам",
-    "floor.s1": "Дополнительная прибыль в месяц", "floor.s2": "На один столик", "floor.s3": "Окупаемость аренды",
-    "floor.note": "Окупаемость считается по тарифу высокого сезона — это самый строгий сценарий.",
-
-    "why.eyebrow": "Механика роста",
-    "why.title": "Почему выручка растёт без дополнительных гостей",
-    "why.sub": "Цифровой официант работает как лучший сотрудник смены: знает меню наизусть, помнит маржинальность каждой позиции и никогда не забывает предложить десерт.",
-    "why.c1t": "AI рекомендует маржинальное",
-    "why.c1d": "Система подбирает блюда с высокой наценкой под конкретный заказ, а не показывает случайный список.",
-    "why.c2t": "Десерт в нужный момент",
-    "why.c2d": "Предложение появляется тогда, когда гость закончил основное блюдо, — момент, который персонал чаще всего пропускает.",
-    "why.c3t": "Напитки и повторный заказ",
-    "why.c3d": "Пустой бокал — упущенная выручка. Планшет предлагает повторить, пока гость за столом.",
-    "why.c4t": "Акции и Happy Hour на виду",
-    "why.c4d": "Сет дня, бизнес-ланч, сезонное меню и рекомендации шеф-повара видит каждый гость. Изменения появляются мгновенно на всех устройствах.",
-    "why.c5t": "Официант и счёт в одно касание",
-    "why.c5d": "Гость не ждёт зрительного контакта: вызвать официанта, запросить счёт и оплатить можно со стола. Оборачиваемость растёт.",
-    "why.c6t": "Мультиязычное меню",
-    "why.c6d": "Русский, английский, тайский и другие языки. Турист заказывает больше, когда понимает состав блюда.",
-    "why.c7t": "Международные способы оплаты",
-    "why.c7d": "Карты, локальные кошельки и QR. Оплата занимает секунды и не зависит от очереди на кассе.",
-    "why.c8t": "Отзывы там, где они нужны",
-    "why.c8d": "После визита гость получает предложение оставить отзыв в Google Maps, TripAdvisor или Facebook. Выше рейтинг — больше новых гостей.",
-    "why.c9t": "Гости возвращаются",
-    "why.c9d": "Программа лояльности, приглашения на события и персональные предложения увеличивают повторные визиты и загрузку зала.",
 
     "ops.eyebrow": "Что получает ресторан",
     "ops.title": "Не только продажи — вся операционка стола",
@@ -115,20 +93,8 @@ const I18N = {
     "ops.f9": "Программа лояльности", "ops.f10": "Получение отзывов",
     "ops.f11": "Аналитика продаж", "ops.f12": "Удалённое управление контентом",
 
-    "plat.eyebrow": "Платформа",
-    "plat.title": "Мы строим не парк планшетов, а сеть точек контакта с гостем",
-    "plat.sub": "Каждое устройство одновременно закрывает четыре задачи — и каждая масштабируется на новый ресторан, город и страну без изменения архитектуры.",
-    "plat.c1t": "Операционный слой ресторана",
-    "plat.c1d": "Меню, заказ, вызов персонала, оплата и отчётность в одном устройстве. Обновления приходят по воздуху на всю сеть сразу.",
-    "plat.c2t": "Премиальный рекламный инвентарь",
-    "plat.c2d": "Экран на столе, гость смотрит на него добровольно и 40+ минут. Показ привязан к месту, времени и составу заказа.",
-    "plat.c3t": "Модель спроса",
-    "plat.c3d": "Чем больше залов подключено, тем точнее рекомендации: система учится на реальных заказах, а не на гипотезах маркетолога.",
-    "plat.c4t": "Франшиза и партнёры",
-    "plat.c4d": "Развёртывание в новом регионе — это локальный партнёр, оборудование и наш стек. Открыты к разговору о партнёрстве и инвестициях.",
-
-    "price.eyebrow": "Тарифы", "price.title": "Два тарифа. Оборудование остаётся нашим",
-    "price.sub": "Цена указана за одно устройство в месяц. Первый месяц — бесплатно, без условий.",
+    "price.eyebrow": "Тарифы", "price.title": "Два тарифа",
+    "price.sub": "Цена указана за одно устройство в месяц.",
     "price.low": "Низкий сезон", "price.high": "Высокий сезон",
     "price.per": "/устройство в месяц", "price.free": "Первый месяц бесплатно",
     "price.all": "Всё из Standard, плюс:", "price.badge": "Максимум прибыли",
@@ -140,29 +106,15 @@ const I18N = {
     "price.p5": "Приоритетная поддержка",
     "price.ctaStd": "Заказать установку", "price.ctaPrm": "Заказать демонстрацию",
 
-    "how.eyebrow": "Запуск", "how.title": "От заявки до работающего зала — 1–3 дня",
-    "how.s1t": "Заявка", "how.s1d": "Вы оставляете контакт, мы уточняем формат зала и меню.",
-    "how.s2t": "Мы приезжаем", "how.s2d": "Смотрим зал, сеть и посадку, считаем количество устройств.",
-    "how.s3t": "Устанавливаем оборудование", "how.s3d": "Крепления, зарядка, точки доступа. Работа зала не останавливается.",
-    "how.s4t": "Настраиваем систему", "how.s4d": "Загружаем меню, цены, языки и акции, связываем систему с вашей кассой.",
-    "how.s5t": "Обучаем персонал", "how.s5d": "Одна короткая смена — и официанты работают с системой уверенно.",
-    "how.s6t": "Ресторан работает", "how.s6d": "Через 1–3 дня зал полностью запущен, вы видите первые данные по продажам.",
-
     "faq.eyebrow": "Вопросы", "faq.title": "Что важно знать до установки",
-    "faq.q1": "Нужно ли покупать оборудование?",
-    "faq.a1": "Нет. Оборудование предоставляется в аренду и остаётся собственностью JET MEDIA.",
-    "faq.q2": "Когда начинается оплата?",
-    "faq.a2": "Со второго месяца. Первый месяц бесплатный — вы принимаете решение по фактическим цифрам продаж.",
-    "faq.q3": "Кто обслуживает оборудование?",
-    "faq.a3": "Полностью JET MEDIA: настройка, обновления, диагностика и ремонт.",
-    "faq.q4": "Что делать, если устройство сломалось?",
-    "faq.a4": "При гарантийном случае меняем бесплатно. Если повреждение произошло по вине клиента, ремонт оплачивается отдельно.",
-    "faq.q5": "Нужно ли менять кассовую систему?",
-    "faq.a5": "Нет. Мы интегрируемся с вашей системой управления: заказы уходят на кухню, меню, цены и стоп-листы синхронизируются автоматически.",
-    "faq.q6": "Можно ли отказаться?",
-    "faq.a6": "Да, в любой момент. В конце оплаченного периода мы просто забираем оборудование.",
-    "faq.q7": "Сколько занимает установка?",
-    "faq.a7": "Обычно от одного до трёх дней, включая настройку меню и обучение персонала.",
+    "faq.q1": "Что делать, если устройство сломалось?",
+    "faq.a1": "При гарантийном случае меняем бесплатно. Если повреждение произошло по вине клиента, ремонт оплачивается отдельно.",
+    "faq.q2": "Нужно ли менять кассовую систему?",
+    "faq.a2": "Нет. Мы интегрируемся с вашей системой управления: заказы уходят на кухню, меню, цены и стоп-листы синхронизируются автоматически.",
+    "faq.q3": "Можно ли отказаться?",
+    "faq.a3": "Да, в любой момент. В конце оплаченного периода мы просто забираем оборудование.",
+    "faq.q4": "Сколько занимает установка?",
+    "faq.a4": "Обычно от одного до трёх дней, включая настройку меню и обучение персонала.",
 
     "form.title": "Оставьте заявку",
     "form.sub": "Свяжемся в течение рабочего дня, покажем систему вживую и посчитаем количество устройств для вашего зала.",
@@ -176,22 +128,20 @@ const I18N = {
     "form.ok": "Заявка отправлена. Свяжемся с вами в течение рабочего дня.",
     "form.errFields": "Заполните имя, телефон и название ресторана.",
     "form.errPhone": "Проверьте номер телефона.",
-    "form.errNet": "Не удалось отправить. Напишите нам в Telegram: @Nickbv",
+    "form.errNet": "Не удалось отправить. Попробуйте ещё раз через минуту.",
 
-    "foot.tag": "Цифровой официант, реклама и аналитика для ресторанов. Пхукет, Таиланд.",
-    "foot.platform": "Платформа"
+    "foot.tag": "Цифровой официант, реклама и аналитика для ресторанов."
   },
 
   en: {
     "meta.title": "JET MEDIA — a digital waiter for restaurants. More revenue without hiring",
-    "meta.desc": "JET MEDIA installs digital-waiter tablets on your restaurant tables for free: AI upsell, multilingual menu, payments, reviews and analytics. First month free.",
+    "meta.desc": "JET MEDIA installs digital-waiter tablets on your restaurant tables: AI upsell, multilingual menu, payment from the table, reviews and sales analytics.",
 
-    "nav.calc": "Calculator", "nav.why": "How it works", "nav.ops": "Features",
+    "nav.calc": "Calculator", "nav.ops": "Features",
     "nav.pricing": "Pricing", "nav.faq": "FAQ", "nav.cta": "Book a demo",
 
-    "hero.eyebrow": "Phuket · A digital waiter on every table",
+    "hero.eyebrow": "A digital waiter on every table",
     "hero.title1": "More revenue", "hero.title2": "without hiring more staff",
-    "hero.sub": "We install the tablets in your restaurant for free. The first month costs nothing. From the second month you pay only equipment rental and service. You can cancel at any time.",
     "hero.ctaDemo": "Book a demo", "hero.ctaInstall": "Request installation",
     "hero.t1": "added revenue", "hero.t2": "load on staff", "hero.t3": "days to launch",
 
@@ -199,32 +149,6 @@ const I18N = {
     "calc.tables": "Number of tables", "calc.guests": "Guests per month", "calc.check": "Average check",
     "calc.current": "Current revenue", "calc.standard": "Standard", "calc.premium": "Premium",
     "calc.note": "Based on the average check uplift AI recommendations deliver. Actual results depend on your menu and season.",
-
-    "floor.eyebrow": "Your floor", "floor.title": "Every table starts selling on its own",
-    "floor.s1": "Extra profit per month", "floor.s2": "Per table", "floor.s3": "Rental payback",
-    "floor.note": "Payback is calculated at high-season pricing — the most conservative scenario.",
-
-    "why.eyebrow": "The mechanics",
-    "why.title": "Why revenue grows without a single extra guest",
-    "why.sub": "The digital waiter works like your best team member: it knows the menu by heart, remembers the margin on every item and never forgets to offer dessert.",
-    "why.c1t": "AI recommends high-margin dishes",
-    "why.c1d": "The system matches high-margin items to the actual order instead of showing a random list.",
-    "why.c2t": "Dessert at the right moment",
-    "why.c2d": "The offer appears right after the main course — the moment staff miss most often.",
-    "why.c3t": "Drinks and refills",
-    "why.c3d": "An empty glass is lost revenue. The tablet offers a refill while the guest is still at the table.",
-    "why.c4t": "Promotions and Happy Hour in plain sight",
-    "why.c4d": "Set of the day, business lunch, seasonal menu and chef's picks reach every guest. Changes appear instantly on every device.",
-    "why.c5t": "Server and bill in one tap",
-    "why.c5d": "No waiting for eye contact: guests can call a server, request the bill and pay from the table. Tables turn faster.",
-    "why.c6t": "Multilingual menu",
-    "why.c6d": "Russian, English, Thai and more. Tourists order more when they understand what's in the dish.",
-    "why.c7t": "International payment methods",
-    "why.c7d": "Cards, local wallets and QR. Paying takes seconds and never depends on the queue at the till.",
-    "why.c8t": "Reviews where they matter",
-    "why.c8d": "After the visit, guests are invited to leave a review on Google Maps, TripAdvisor or Facebook. A higher rating brings new guests.",
-    "why.c9t": "Guests come back",
-    "why.c9d": "Loyalty programme, event invitations and personal offers increase repeat visits and keep the room full.",
 
     "ops.eyebrow": "What the restaurant gets",
     "ops.title": "Not just sales — the whole table operation",
@@ -241,20 +165,8 @@ const I18N = {
     "ops.f9": "Loyalty programme", "ops.f10": "Collecting reviews",
     "ops.f11": "Sales analytics", "ops.f12": "Remote content management",
 
-    "plat.eyebrow": "Platform",
-    "plat.title": "We're building a network of guest touchpoints, not a fleet of tablets",
-    "plat.sub": "Each device covers four jobs at once — and each of them scales to a new restaurant, city and country without changing the architecture.",
-    "plat.c1t": "The restaurant's operating layer",
-    "plat.c1d": "Menu, ordering, service calls, payment and reporting in one device. Updates roll out over the air to the entire network.",
-    "plat.c2t": "Premium ad inventory",
-    "plat.c2d": "A screen on the table that guests look at willingly for 40+ minutes. Every impression is tied to place, time and order context.",
-    "plat.c3t": "A demand model",
-    "plat.c3d": "The more venues connected, the sharper the recommendations: the system learns from real orders, not marketing hypotheses.",
-    "plat.c4t": "Franchise and partners",
-    "plat.c4d": "Entering a new region takes a local partner, hardware and our stack. We're open to partnership and investment conversations.",
-
-    "price.eyebrow": "Pricing", "price.title": "Two plans. The hardware stays ours",
-    "price.sub": "Price is per device per month. The first month is free, no conditions.",
+    "price.eyebrow": "Pricing", "price.title": "Two plans",
+    "price.sub": "Price is per device per month.",
     "price.low": "Low season", "price.high": "High season",
     "price.per": "/device per month", "price.free": "First month free",
     "price.all": "Everything in Standard, plus:", "price.badge": "Maximum profit",
@@ -266,29 +178,15 @@ const I18N = {
     "price.p5": "Priority support",
     "price.ctaStd": "Request installation", "price.ctaPrm": "Book a demo",
 
-    "how.eyebrow": "Launch", "how.title": "From request to a working floor in 1–3 days",
-    "how.s1t": "Request", "how.s1d": "You leave a contact, we clarify the venue format and the menu.",
-    "how.s2t": "We visit", "how.s2d": "We check the room, the network and the seating, then count the devices.",
-    "how.s3t": "We install the hardware", "how.s3d": "Mounts, charging, access points. Service never stops.",
-    "how.s4t": "We configure the system", "how.s4d": "Menu, prices, languages and promotions, connected to your POS.",
-    "how.s5t": "We train the staff", "how.s5d": "One short shift and your servers work with the system confidently.",
-    "how.s6t": "The restaurant runs", "how.s6d": "Within 1–3 days the floor is fully live and you see the first sales data.",
-
     "faq.eyebrow": "FAQ", "faq.title": "What to know before installation",
-    "faq.q1": "Do I have to buy the equipment?",
-    "faq.a1": "No. The equipment is rented and remains the property of JET MEDIA.",
-    "faq.q2": "When does billing start?",
-    "faq.a2": "From the second month. The first month is free — you decide based on real sales numbers.",
-    "faq.q3": "Who services the equipment?",
-    "faq.a3": "JET MEDIA does, fully: setup, updates, diagnostics and repair.",
-    "faq.q4": "What if a device breaks?",
-    "faq.a4": "Warranty cases are replaced free of charge. Damage caused by the client is repaired at extra cost.",
-    "faq.q5": "Do I need to change my POS system?",
-    "faq.a5": "No. We integrate with your management system: orders go to the kitchen, menu, prices and stop-lists sync automatically.",
-    "faq.q6": "Can I cancel?",
-    "faq.a6": "Yes, at any time. At the end of the paid period we simply collect the equipment.",
-    "faq.q7": "How long does installation take?",
-    "faq.a7": "Usually one to three days, including menu setup and staff training.",
+    "faq.q1": "What if a device breaks?",
+    "faq.a1": "Warranty cases are replaced free of charge. Damage caused by the client is repaired at extra cost.",
+    "faq.q2": "Do I need to change my POS system?",
+    "faq.a2": "No. We integrate with your management system: orders go to the kitchen, menu, prices and stop-lists sync automatically.",
+    "faq.q3": "Can I cancel?",
+    "faq.a3": "Yes, at any time. At the end of the paid period we simply collect the equipment.",
+    "faq.q4": "How long does installation take?",
+    "faq.a4": "Usually one to three days, including menu setup and staff training.",
 
     "form.title": "Send a request",
     "form.sub": "We'll get back to you within one business day, show the system live and calculate how many devices your floor needs.",
@@ -302,22 +200,20 @@ const I18N = {
     "form.ok": "Request sent. We'll contact you within one business day.",
     "form.errFields": "Please fill in name, phone and restaurant name.",
     "form.errPhone": "Please check the phone number.",
-    "form.errNet": "Sending failed. Message us on Telegram: @Nickbv",
+    "form.errNet": "Sending failed. Please try again in a minute.",
 
-    "foot.tag": "Digital waiter, advertising and analytics for restaurants. Phuket, Thailand.",
-    "foot.platform": "Platform"
+    "foot.tag": "Digital waiter, advertising and analytics for restaurants."
   },
 
   th: {
     "meta.title": "JET MEDIA — พนักงานเสิร์ฟดิจิทัลสำหรับร้านอาหาร เพิ่มรายได้โดยไม่ต้องจ้างพนักงานเพิ่ม",
-    "meta.desc": "JET MEDIA ติดตั้งแท็บเล็ตพนักงานเสิร์ฟดิจิทัลบนโต๊ะร้านอาหารให้ฟรี ทั้งการแนะนำเมนูด้วย AI เมนูหลายภาษา การชำระเงิน รีวิว และการวิเคราะห์ยอดขาย เดือนแรกฟรี",
+    "meta.desc": "JET MEDIA ติดตั้งแท็บเล็ตพนักงานเสิร์ฟดิจิทัลบนโต๊ะร้านอาหาร ทั้งการแนะนำเมนูด้วย AI เมนูหลายภาษา ชำระเงินจากโต๊ะ รีวิว และการวิเคราะห์ยอดขาย",
 
-    "nav.calc": "คำนวณกำไร", "nav.why": "เพิ่มยอดอย่างไร", "nav.ops": "ความสามารถ",
+    "nav.calc": "คำนวณกำไร", "nav.ops": "ความสามารถ",
     "nav.pricing": "แพ็กเกจ", "nav.faq": "คำถามที่พบบ่อย", "nav.cta": "ขอชมการสาธิต",
 
-    "hero.eyebrow": "ภูเก็ต · พนักงานเสิร์ฟดิจิทัลบนทุกโต๊ะ",
+    "hero.eyebrow": "พนักงานเสิร์ฟดิจิทัลบนทุกโต๊ะ",
     "hero.title1": "รายได้เพิ่มขึ้น", "hero.title2": "โดยไม่ต้องจ้างพนักงานเพิ่ม",
-    "hero.sub": "เราติดตั้งแท็บเล็ตให้ร้านของคุณฟรี เดือนแรกไม่มีค่าใช้จ่าย ตั้งแต่เดือนที่สองจ่ายเพียงค่าเช่าอุปกรณ์และค่าบริการ ยกเลิกได้ทุกเมื่อ",
     "hero.ctaDemo": "ขอชมการสาธิต", "hero.ctaInstall": "ขอติดตั้ง",
     "hero.t1": "รายได้ที่เพิ่มขึ้น", "hero.t2": "ภาระงานของพนักงาน", "hero.t3": "วันในการเริ่มใช้งาน",
 
@@ -325,32 +221,6 @@ const I18N = {
     "calc.tables": "จำนวนโต๊ะ", "calc.guests": "ลูกค้าต่อเดือน", "calc.check": "ยอดบิลเฉลี่ย",
     "calc.current": "รายได้ปัจจุบัน", "calc.standard": "Standard", "calc.premium": "Premium",
     "calc.note": "คำนวณจากยอดบิลที่เพิ่มขึ้นโดยเฉลี่ยเมื่อใช้คำแนะนำจาก AI ผลลัพธ์จริงขึ้นอยู่กับเมนูและฤดูกาล",
-
-    "floor.eyebrow": "ห้องอาหารของคุณ", "floor.title": "ทุกโต๊ะเริ่มขายด้วยตัวเอง",
-    "floor.s1": "กำไรเพิ่มต่อเดือน", "floor.s2": "ต่อหนึ่งโต๊ะ", "floor.s3": "คุ้มค่าเช่ากี่เท่า",
-    "floor.note": "คำนวณความคุ้มค่าด้วยราคาช่วงไฮซีซัน ซึ่งเป็นกรณีที่เข้มงวดที่สุด",
-
-    "why.eyebrow": "กลไกการเติบโต",
-    "why.title": "ทำไมรายได้เพิ่มขึ้นโดยไม่ต้องมีลูกค้าเพิ่ม",
-    "why.sub": "พนักงานเสิร์ฟดิจิทัลทำงานเหมือนพนักงานที่เก่งที่สุด จำเมนูได้ทุกจาน รู้กำไรของแต่ละเมนู และไม่เคยลืมเสนอของหวาน",
-    "why.c1t": "AI แนะนำเมนูกำไรสูง",
-    "why.c1d": "ระบบเลือกเมนูกำไรสูงให้เข้ากับออร์เดอร์จริง ไม่ใช่แสดงรายการแบบสุ่ม",
-    "why.c2t": "เสนอของหวานถูกจังหวะ",
-    "why.c2d": "ข้อเสนอปรากฏหลังจานหลักพอดี ซึ่งเป็นจังหวะที่พนักงานมักพลาด",
-    "why.c3t": "เครื่องดื่มและการสั่งซ้ำ",
-    "why.c3d": "แก้วที่ว่างคือรายได้ที่หายไป แท็บเล็ตเสนอสั่งเพิ่มขณะลูกค้ายังนั่งอยู่",
-    "why.c4t": "โปรโมชันและ Happy Hour เห็นชัด",
-    "why.c4d": "เซ็ตประจำวัน บิสสิเนสลันช์ เมนูตามฤดูกาล และเมนูแนะนำของเชฟ ไปถึงลูกค้าทุกคน ทุกการเปลี่ยนแปลงแสดงผลทันทีบนทุกเครื่อง",
-    "why.c5t": "เรียกพนักงานและขอบิลด้วยปุ่มเดียว",
-    "why.c5d": "ลูกค้าไม่ต้องรอสบตา เรียกพนักงาน ขอบิล และชำระเงินได้จากโต๊ะ โต๊ะจึงหมุนเวียนเร็วขึ้น",
-    "why.c6t": "เมนูหลายภาษา",
-    "why.c6d": "ไทย อังกฤษ รัสเซีย และภาษาอื่น ๆ นักท่องเที่ยวสั่งมากขึ้นเมื่อเข้าใจส่วนประกอบของอาหาร",
-    "why.c7t": "ช่องทางชำระเงินระหว่างประเทศ",
-    "why.c7d": "บัตร วอลเล็ตท้องถิ่น และ QR จ่ายเสร็จในไม่กี่วินาที ไม่ต้องรอคิวที่แคชเชียร์",
-    "why.c8t": "รีวิวในที่ที่สำคัญ",
-    "why.c8d": "หลังใช้บริการ ระบบเชิญลูกค้าเขียนรีวิวบน Google Maps, TripAdvisor หรือ Facebook คะแนนสูงขึ้นย่อมดึงลูกค้าใหม่",
-    "why.c9t": "ลูกค้ากลับมาอีก",
-    "why.c9d": "โปรแกรมสะสมคะแนน คำเชิญร่วมงาน และข้อเสนอเฉพาะบุคคล ช่วยเพิ่มการกลับมาใช้บริการซ้ำ",
 
     "ops.eyebrow": "สิ่งที่ร้านได้รับ",
     "ops.title": "ไม่ใช่แค่ยอดขาย แต่คือการดำเนินงานทั้งโต๊ะ",
@@ -367,20 +237,8 @@ const I18N = {
     "ops.f9": "โปรแกรมสะสมคะแนน", "ops.f10": "เก็บรีวิวจากลูกค้า",
     "ops.f11": "วิเคราะห์ยอดขาย", "ops.f12": "จัดการเนื้อหาจากระยะไกล",
 
-    "plat.eyebrow": "แพลตฟอร์ม",
-    "plat.title": "เราสร้างเครือข่ายจุดสัมผัสลูกค้า ไม่ใช่แค่กองแท็บเล็ต",
-    "plat.sub": "อุปกรณ์แต่ละเครื่องทำงานสี่ด้านพร้อมกัน และทุกด้านขยายไปยังร้าน เมือง และประเทศใหม่ได้โดยไม่ต้องเปลี่ยนสถาปัตยกรรม",
-    "plat.c1t": "ชั้นปฏิบัติการของร้าน",
-    "plat.c1d": "เมนู การสั่ง เรียกพนักงาน ชำระเงิน และรายงาน รวมในเครื่องเดียว อัปเดตส่งถึงทั้งเครือข่ายพร้อมกัน",
-    "plat.c2t": "พื้นที่โฆษณาระดับพรีเมียม",
-    "plat.c2d": "จอบนโต๊ะที่ลูกค้าเลือกมองเองนานกว่า 40 นาที ทุกการแสดงผลผูกกับสถานที่ เวลา และออร์เดอร์",
-    "plat.c3t": "โมเดลความต้องการ",
-    "plat.c3d": "ยิ่งเชื่อมต่อหลายร้าน คำแนะนำยิ่งแม่นยำ เพราะระบบเรียนรู้จากออร์เดอร์จริง ไม่ใช่สมมติฐานทางการตลาด",
-    "plat.c4t": "แฟรนไชส์และพันธมิตร",
-    "plat.c4d": "การเข้าสู่ภูมิภาคใหม่ใช้พันธมิตรท้องถิ่น อุปกรณ์ และเทคโนโลยีของเรา เรายินดีคุยเรื่องความร่วมมือและการลงทุน",
-
-    "price.eyebrow": "แพ็กเกจ", "price.title": "สองแพ็กเกจ อุปกรณ์ยังเป็นของเรา",
-    "price.sub": "ราคาต่อหนึ่งเครื่องต่อเดือน เดือนแรกฟรี ไม่มีเงื่อนไข",
+    "price.eyebrow": "แพ็กเกจ", "price.title": "สองแพ็กเกจ",
+    "price.sub": "ราคาต่อหนึ่งเครื่องต่อเดือน",
     "price.low": "โลว์ซีซัน", "price.high": "ไฮซีซัน",
     "price.per": "/เครื่อง/เดือน", "price.free": "เดือนแรกฟรี",
     "price.all": "ทุกอย่างใน Standard และเพิ่ม:", "price.badge": "กำไรสูงสุด",
@@ -392,29 +250,15 @@ const I18N = {
     "price.p5": "ซัพพอร์ตแบบพิเศษ",
     "price.ctaStd": "ขอติดตั้ง", "price.ctaPrm": "ขอชมการสาธิต",
 
-    "how.eyebrow": "เริ่มใช้งาน", "how.title": "จากคำขอถึงห้องอาหารพร้อมใช้งานใน 1–3 วัน",
-    "how.s1t": "ส่งคำขอ", "how.s1d": "คุณฝากช่องทางติดต่อ เราสอบถามรูปแบบร้านและเมนู",
-    "how.s2t": "เราเข้าไปดูหน้างาน", "how.s2d": "ตรวจห้องอาหาร ระบบเครือข่าย และที่นั่ง เพื่อคำนวณจำนวนเครื่อง",
-    "how.s3t": "ติดตั้งอุปกรณ์", "how.s3d": "ขายึด จุดชาร์จ และแอ็กเซสพอยต์ ร้านเปิดบริการได้ตามปกติ",
-    "how.s4t": "ตั้งค่าระบบ", "how.s4d": "ใส่เมนู ราคา ภาษา และโปรโมชัน พร้อมเชื่อมต่อกับระบบขายของคุณ",
-    "how.s5t": "อบรมพนักงาน", "how.s5d": "ใช้เวลาเพียงหนึ่งกะสั้น ๆ พนักงานก็ใช้ระบบได้อย่างมั่นใจ",
-    "how.s6t": "ร้านเดินเต็มระบบ", "how.s6d": "ภายใน 1–3 วัน ห้องอาหารพร้อมใช้งานเต็มรูปแบบ และคุณเห็นข้อมูลยอดขายชุดแรก",
-
     "faq.eyebrow": "คำถามที่พบบ่อย", "faq.title": "สิ่งที่ควรรู้ก่อนติดตั้ง",
-    "faq.q1": "ต้องซื้ออุปกรณ์เองหรือไม่",
-    "faq.a1": "ไม่ต้อง อุปกรณ์ให้เช่าและยังเป็นทรัพย์สินของ JET MEDIA",
-    "faq.q2": "เริ่มเก็บค่าบริการเมื่อไร",
-    "faq.a2": "ตั้งแต่เดือนที่สอง เดือนแรกฟรี คุณจึงตัดสินใจจากตัวเลขยอดขายจริง",
-    "faq.q3": "ใครดูแลอุปกรณ์",
-    "faq.a3": "JET MEDIA ดูแลทั้งหมด ทั้งการตั้งค่า อัปเดต ตรวจเช็ก และซ่อม",
-    "faq.q4": "ถ้าอุปกรณ์เสียต้องทำอย่างไร",
-    "faq.a4": "หากอยู่ในการรับประกัน เราเปลี่ยนให้ฟรี หากเสียหายจากการใช้งานของลูกค้า คิดค่าซ่อมแยกต่างหาก",
-    "faq.q5": "ต้องเปลี่ยนระบบ POS หรือไม่",
-    "faq.a5": "ไม่ต้อง เราเชื่อมต่อกับระบบจัดการเดิมของคุณ ออร์เดอร์ส่งเข้าครัว เมนู ราคา และสต็อปลิสต์ซิงก์อัตโนมัติ",
-    "faq.q6": "ยกเลิกได้หรือไม่",
-    "faq.a6": "ได้ทุกเมื่อ เมื่อสิ้นสุดรอบที่ชำระแล้ว เราเข้าไปรับอุปกรณ์คืน",
-    "faq.q7": "ติดตั้งใช้เวลานานเท่าไร",
-    "faq.a7": "โดยทั่วไป 1–3 วัน รวมการตั้งค่าเมนูและอบรมพนักงาน",
+    "faq.q1": "ถ้าอุปกรณ์เสียต้องทำอย่างไร",
+    "faq.a1": "หากอยู่ในการรับประกัน เราเปลี่ยนให้ฟรี หากเสียหายจากการใช้งานของลูกค้า คิดค่าซ่อมแยกต่างหาก",
+    "faq.q2": "ต้องเปลี่ยนระบบ POS หรือไม่",
+    "faq.a2": "ไม่ต้อง เราเชื่อมต่อกับระบบจัดการเดิมของคุณ ออร์เดอร์ส่งเข้าครัว เมนู ราคา และสต็อปลิสต์ซิงก์อัตโนมัติ",
+    "faq.q3": "ยกเลิกได้หรือไม่",
+    "faq.a3": "ได้ทุกเมื่อ เมื่อสิ้นสุดรอบที่ชำระแล้ว เราเข้าไปรับอุปกรณ์คืน",
+    "faq.q4": "ติดตั้งใช้เวลานานเท่าไร",
+    "faq.a4": "โดยทั่วไป 1–3 วัน รวมการตั้งค่าเมนูและอบรมพนักงาน",
 
     "form.title": "ส่งคำขอ",
     "form.sub": "เราจะติดต่อกลับภายในหนึ่งวันทำการ สาธิตระบบให้ดูจริง และคำนวณจำนวนเครื่องที่ร้านของคุณต้องใช้",
@@ -428,10 +272,9 @@ const I18N = {
     "form.ok": "ส่งคำขอแล้ว เราจะติดต่อกลับภายในหนึ่งวันทำการ",
     "form.errFields": "กรุณากรอกชื่อ เบอร์โทร และชื่อร้าน",
     "form.errPhone": "กรุณาตรวจสอบเบอร์โทร",
-    "form.errNet": "ส่งไม่สำเร็จ ทักหาเราทาง Telegram: @Nickbv",
+    "form.errNet": "ส่งไม่สำเร็จ กรุณาลองใหม่อีกครั้งในอีกสักครู่",
 
-    "foot.tag": "พนักงานเสิร์ฟดิจิทัล โฆษณา และการวิเคราะห์สำหรับร้านอาหาร ภูเก็ต ประเทศไทย",
-    "foot.platform": "แพลตฟอร์ม"
+    "foot.tag": "พนักงานเสิร์ฟดิจิทัล โฆษณา และการวิเคราะห์สำหรับร้านอาหาร"
   }
 };
 
@@ -447,13 +290,37 @@ let lang = "ru";
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let nf = new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 0 });
+let pf = new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 1 });
 const money  = n => nf.format(Math.round(n)) + " ฿";
 const plus   = n => "+" + money(n);
 const plainN = n => nf.format(Math.round(n));
 
+/* Доля → проценты: 0.06 → «6». Дробные значения вроде 0.125 покажутся как «12,5» */
+const pctNum = v => pf.format(Math.round(v * 1000) / 10);
+
+/* Подстановка процентов в разметку.
+   Все элементы с data-claim берут значение из констант выше, поэтому
+   цифра в дизайне и цифра в расчётах не могут разойтись.
+   Вызывается при каждой смене языка — вместе с форматом чисел. */
+function renderClaims(){
+  const claims = {
+    "uplift-std":   "+" + pctNum(UPLIFT.std) + "%",
+    "uplift-prm":   "+" + pctNum(UPLIFT.prm) + "%",
+    // Если тарифы дают одинаковый прирост, диапазон схлопывается в одно число
+    "uplift-range": UPLIFT.std === UPLIFT.prm
+      ? "+" + pctNum(UPLIFT.std) + "%"
+      : "+" + pctNum(UPLIFT.std) + "–" + pctNum(UPLIFT.prm) + "%",
+    "relief":       "−" + pctNum(STAFF_RELIEF) + "%"
+  };
+  $$("[data-claim]").forEach(el => {
+    const val = claims[el.dataset.claim];
+    if (val) el.textContent = val;
+  });
+}
+
 /* Плавный счётчик: анимирует число от текущего к целевому.
    fmt — функция форматирования, чтобы одна анимация обслуживала
-   и «1 530 000 ฿», и «×7». */
+   и «1 530 000 ฿», и цену тарифа. */
 function animateNumber(el, to, fmt, duration = 650){
   const from = Number(el.dataset.v || 0);
   el.dataset.v = to;
@@ -493,7 +360,9 @@ function applyLang(code){
   });
 
   nf = new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 0 });
+  pf = new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 1 });
   $$(".lang-btn").forEach(b => b.classList.toggle("is-active", b.dataset.setLang === lang));
+  renderClaims();
   recalc(true);
   renderPrices(true);
 
@@ -503,36 +372,16 @@ function applyLang(code){
 $$(".lang-btn").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.setLang)));
 
 /* =================================================================
-   6. КАЛЬКУЛЯТОР ПРИБЫЛИ + ПЛАН ЗАЛА
+   6. КАЛЬКУЛЯТОР ПРИБЫЛИ
    ================================================================= */
 const sTables = $("#sTables"), sGuests = $("#sGuests"), sCheck = $("#sCheck");
 const oTables = $("#oTables"), oGuests = $("#oGuests"), oCheck = $("#oCheck");
 const rNow = $("#rNow"), rStd = $("#rStd"), rPrm = $("#rPrm");
-const fMonth = $("#fMonth"), fTable = $("#fTable"), fRoi = $("#fRoi");
-const floorMap = $("#floorMap");
-
-let floorPlan = "std";        // какой тариф показывает план зала
-let lastTables = 0;           // чтобы не перерисовывать сетку зря
 
 /* Заливка дорожки ползунка через CSS-переменную */
 function paintRange(input){
   const pct = ((input.value - input.min) / (input.max - input.min)) * 100;
   input.style.setProperty("--p", pct + "%");
-}
-
-/* Перерисовка сетки столиков */
-function renderFloor(count){
-  if (count === lastTables) return;
-  lastTables = count;
-  const frag = document.createDocumentFragment();
-  for (let i = 1; i <= count; i++){
-    const cell = document.createElement("div");
-    cell.className = "tbl";
-    cell.textContent = String(i).padStart(2, "0");
-    if (!reduceMotion) cell.style.animationDelay = Math.min(i * 12, 420) + "ms";
-    frag.appendChild(cell);
-  }
-  floorMap.replaceChildren(frag);
 }
 
 /* Главный пересчёт. instant = true — без анимации (например, при смене языка) */
@@ -542,14 +391,6 @@ function recalc(instant){
   const check  = +sCheck.value;
 
   const revenue = guests * check;
-  const addStd  = revenue * UPLIFT.std;
-  const addPrm  = revenue * UPLIFT.prm;
-
-  const add    = floorPlan === "prm" ? addPrm : addStd;
-  const perTbl = add / tables;
-  // Окупаемость: прирост против аренды по цене высокого сезона
-  const rent = tables * PRICE.high[floorPlan] * USD_THB;
-  const roi  = rent > 0 ? add / rent : 0;
 
   oTables.textContent = plainN(tables);
   oGuests.textContent = plainN(guests);
@@ -558,25 +399,11 @@ function recalc(instant){
 
   const dur = instant ? 0 : 650;
   animateNumber(rNow, revenue, money, dur);
-  animateNumber(rStd, addStd, plus, dur);
-  animateNumber(rPrm, addPrm, plus, dur);
-  animateNumber(fMonth, add, plus, dur);
-  animateNumber(fTable, perTbl, plus, dur);
-  animateNumber(fRoi, roi, v => "×" + v.toFixed(1), dur);
-
-  renderFloor(tables);
+  animateNumber(rStd, revenue * UPLIFT.std, plus, dur);
+  animateNumber(rPrm, revenue * UPLIFT.prm, plus, dur);
 }
 
 [sTables, sGuests, sCheck].forEach(inp => inp.addEventListener("input", () => recalc(false)));
-
-/* Переключатель Standard / Premium под планом зала */
-$$("[data-plan]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    floorPlan = btn.dataset.plan;
-    $$("[data-plan]").forEach(b => b.classList.toggle("is-active", b === btn));
-    recalc(false);
-  });
-});
 
 /* =================================================================
    7. ТАРИФЫ — переключение сезона
