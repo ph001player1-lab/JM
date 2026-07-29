@@ -28,7 +28,7 @@ const CONFIG = {
      «Развернуть → Новое развёртывание → Веб-приложение».
      Заканчивается на /exec, а не на /dev.
      Настройка скрипта — в файле Code.gs и в README.             */
-  appsScriptUrl: "PASTE_YOUR_WEB_APP_URL_HERE",
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycbxR0e2BMG1kHRYJQEoEMEwEVHscGfP5z2pWBeOrxGRev72P300jbMtXlZy_2eLD2nIf2A/exec",
 
   /* --- Прирост выручки, % ----------------------------------------
      Обычные проценты, не доли: 6 — это 6%, 15 — это 15%.
