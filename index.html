@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080B17">
+
+<!-- ============ SEO ============ -->
+<title>JET MEDIA — цифровой официант для ресторанов. Дополнительная выручка без найма персонала</title>
+<meta name="description" content="JET MEDIA устанавливает планшеты-официанты на столы ресторана: AI-апселл, мультиязычное меню, оплата со стола, отзывы и аналитика продаж.">
+<meta name="keywords" content="цифровой официант, планшеты для ресторана, электронное меню, QR меню, AI upsell, ресторанная аналитика, JET MEDIA">
+<meta name="author" content="JET MEDIA">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://jetmedia.example/">
+
+<!-- ============ OpenGraph / Twitter ============ -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="JET MEDIA">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale:alternate" content="th_TH">
+<meta property="og:title" content="JET MEDIA — цифровой официант для ресторанов">
+<meta property="og:description" content="Планшеты на столах: AI-апселл, мультиязычное меню, оплата и аналитика продаж.">
+<meta property="og:url" content="https://jetmedia.example/">
+<meta property="og:image" content="og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="JET MEDIA — цифровой официант для ресторанов">
+<meta name="twitter:description" content="Планшеты на столах: AI-апселл, мультиязычное меню, оплата и аналитика продаж.">
+<meta name="twitter:image" content="og-image.png">
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+
+<!-- ============ Шрифты брендбука: Manrope Bold + Inter Regular ============ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "JET MEDIA",
+  "slogan": "Reaching every horizon",
+  "url": "https://jetmedia.example/",
+  "logo": "https://jetmedia.example/logo.png",
+  "description": "Цифровой официант для ресторанов: AI-рекомендации, мультиязычное меню, оплата со стола, отзывы и аналитика продаж.",
+  "makesOffer": [
+    { "@type": "Offer", "name": "Standard", "price": "10", "priceCurrency": "USD",
+      "description": "Аренда устройства, электронное меню, вызов официанта, обслуживание оборудования." },
+    { "@type": "Offer", "name": "Premium", "price": "20", "priceCurrency": "USD",
+      "description": "Заказ и оплата со стола, интеграция с системой ресторана, расширенная аналитика, без сторонней рекламы." }
+  ]
+}
+</script>
+</head>
+
+<body>
+
+<!-- ================================================================
+     ШАПКА
+     ================================================================ -->
+<header class="site-head" id="siteHead">
+  <div class="wrap head-inner">
+
+    <a class="brand" href="#top" aria-label="JET MEDIA">
+      <img class="logo" src="logo.png" alt="JET MEDIA" width="1200" height="236">
+    </a>
+
+    <nav class="nav" id="nav" aria-label="Основная навигация">
+      <a href="#calc" data-i18n="nav.calc">Калькулятор</a>
+      <a href="#ops" data-i18n="nav.ops">Возможности</a>
+      <a href="#pricing" data-i18n="nav.pricing">Тарифы</a>
+      <a href="#faq" data-i18n="nav.faq">Вопросы</a>
+    </nav>
+
+    <div class="head-actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" class="lang-btn is-active" data-set-lang="ru">RU</button>
+        <button type="button" class="lang-btn" data-set-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-set-lang="th">TH</button>
+      </div>
+      <a class="btn btn-ghost head-cta" href="#request" data-request-type="demo" data-i18n="nav.cta">Демонстрация</a>
+      <button class="burger" id="burger" type="button" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================================================================
+     HERO + КАЛЬКУЛЯТОР
+     Все числа с атрибутом data-claim подставляет script.js из CONFIG.
+     ================================================================ -->
+<section class="hero" id="calc">
+  <div class="hero-bg" aria-hidden="true">
+    <svg class="arc" viewBox="0 0 1440 300" preserveAspectRatio="none" focusable="false">
+      <defs>
+        <linearGradient id="arcG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0"   stop-color="#187BFF" stop-opacity="0"/>
+          <stop offset=".28" stop-color="#187BFF" stop-opacity=".85"/>
+          <stop offset=".52" stop-color="#9FE1FF" stop-opacity="1"/>
+          <stop offset=".76" stop-color="#187BFF" stop-opacity=".85"/>
+          <stop offset="1"   stop-color="#187BFF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0 268 C 420 92, 1020 92, 1440 268" fill="none" stroke="url(#arcG)" stroke-width="2.5"/>
+      <circle cx="720" cy="130" r="4" fill="#EAF7FF"/>
+    </svg>
+  </div>
+
+  <div class="wrap hero-grid">
+
+    <div class="hero-copy">
+      <p class="eyebrow" data-i18n="hero.eyebrow">Цифровой официант на каждом столе</p>
+      <h1 class="hero-title">
+        <span data-i18n="hero.title1">Дополнительная выручка</span>
+        <span class="accent" data-i18n="hero.title2">без найма персонала</span>
+      </h1>
+
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#request" data-request-type="demo" data-i18n="hero.ctaDemo">Заказать демонстрацию</a>
+        <a class="btn btn-line" href="#request" data-request-type="install" data-i18n="hero.ctaInstall">Заказать установку</a>
+      </div>
+
+      <ul class="hero-trust">
+        <li><strong data-claim="uplift-range">+6–15%</strong><span data-i18n="hero.t1">к выручке зала</span></li>
+        <li><strong data-claim="relief">−20%</strong><span data-i18n="hero.t2">нагрузки на персонал</span></li>
+        <li><strong data-claim="launch-days">1–3</strong><span data-i18n="hero.t3">дня на запуск</span></li>
+      </ul>
+    </div>
+
+    <!-- ---------- Калькулятор прибыли ---------- -->
+    <div class="calc glass" id="calcCard">
+      <div class="calc-head">
+        <h2 class="calc-title" data-i18n="calc.title">Калькулятор прибыли</h2>
+        <div class="seg seg-sm" role="group" aria-label="Период">
+          <button type="button" class="seg-btn" data-period="month" data-i18n="calc.month">Месяц</button>
+          <button type="button" class="seg-btn" data-period="year" data-i18n="calc.year">Год</button>
+        </div>
+      </div>
+
+      <div class="sliders">
+        <div class="field">
+          <label class="field-top" for="sTables">
+            <span data-i18n="calc.tables">Количество столиков</span>
+            <output class="val num" id="oTables">20</output>
+          </label>
+          <input type="range" id="sTables" min="5" max="50" step="1" value="20" aria-label="Количество столиков">
+        </div>
+
+        <div class="field">
+          <label class="field-top" for="sGuests">
+            <span data-i18n="calc.guests">Посетителей в месяц</span>
+            <output class="val num" id="oGuests">1 800</output>
+          </label>
+          <input type="range" id="sGuests" min="200" max="15000" step="50" value="1800" aria-label="Количество посетителей в месяц">
+        </div>
+
+        <div class="field">
+          <label class="field-top" for="sCheck">
+            <span data-i18n="calc.check">Средний чек</span>
+            <output class="val num" id="oCheck">850 ฿</output>
+          </label>
+          <input type="range" id="sCheck" min="100" max="5000" step="10" value="850" aria-label="Средний чек">
+        </div>
+      </div>
+
+      <!-- Сезон влияет и на аренду в расчёте, и на цены в тарифах -->
+      <div class="calc-season">
+        <span class="calc-season-label" data-i18n="calc.season">Сезон аренды</span>
+        <div class="seg seg-sm" role="group" aria-label="Сезон">
+          <button type="button" class="seg-btn" data-season="low" data-i18n="price.low">Низкий сезон</button>
+          <button type="button" class="seg-btn" data-season="high" data-i18n="price.high">Высокий сезон</button>
+        </div>
+      </div>
+
+      <div class="calc-now">
+        <span data-i18n="calc.current">Текущая выручка</span>
+        <b class="num" id="rNow">1 530 000 ฿</b>
+      </div>
+
+      <div class="calc-result">
+        <div class="res">
+          <p class="res-label"><span data-i18n="calc.standard">Standard</span> <em class="num" data-claim="uplift-std">+6%</em></p>
+          <p class="res-value num" id="rStd">+91 800 ฿</p>
+          <div class="res-rows">
+            <p class="res-row"><span data-i18n="calc.rent">Аренда оборудования</span><b class="num" id="costStd">−7 200 ฿</b></p>
+            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netStd">+84 600 ฿</b></p>
+          </div>
+        </div>
+        <div class="res res-pro">
+          <p class="res-label"><span data-i18n="calc.premium">Premium</span> <em class="num" data-claim="uplift-prm">+15%</em></p>
+          <p class="res-value num" id="rPrm">+229 500 ฿</p>
+          <div class="res-rows">
+            <p class="res-row"><span data-i18n="calc.rent">Аренда оборудования</span><b class="num" id="costPrm">−14 400 ฿</b></p>
+            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netPrm">+215 100 ฿</b></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================================================================
+     ЧТО ПОЛУЧАЕТ РЕСТОРАН + ВОЗМОЖНОСТИ ПЛАТФОРМЫ
+     ================================================================ -->
+<section class="section" id="ops">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow" data-i18n="ops.eyebrow">Что получает ресторан</p>
+      <h2 data-i18n="ops.title">Не только продажи — вся операционка стола</h2>
+    </header>
+
+    <div class="ops-grid">
+      <article class="ops-card reveal">
+        <p class="ops-k num" data-claim="relief">−20%</p>
+        <h3 data-i18n="ops.c1t">Нагрузки на персонал</h3>
+        <p data-i18n="ops.c1d">Устройство знакомит с меню, отвечает на вопросы, помогает оформить заказ, вызывает официанта и помогает с оплатой. Команда занимается качеством сервиса, а не рутиной.</p>
+      </article>
+      <article class="ops-card reveal">
+        <p class="ops-k num">POS</p>
+        <h3 data-i18n="ops.c2t">Полная совместимость с вашей системой</h3>
+        <p data-i18n="ops.c2d">Заказы автоматически передаются на кухню, меню и цены всегда актуальны, стоп-листы синхронизируются. Привычные процессы не меняются.</p>
+      </article>
+      <article class="ops-card reveal">
+        <p class="ops-k num">100%</p>
+        <h3 data-i18n="ops.c3t">Встроенный Power Bank</h3>
+        <p data-i18n="ops.c3d">Гость заряжает телефон прямо за столом и остаётся в зале дольше. Внимание к деталям, которое замечают и о котором пишут в отзывах.</p>
+      </article>
+    </div>
+
+    <div class="caps reveal">
+      <p class="caps-title" data-i18n="ops.capsTitle">Возможности платформы</p>
+      <ul class="caps-list">
+        <li data-i18n="ops.f1">Электронное меню</li>
+        <li data-i18n="ops.f2">Заказ со стола</li>
+        <li data-i18n="ops.f3">Вызов официанта</li>
+        <li data-i18n="ops.f4">Запрос счёта</li>
+        <li data-i18n="ops.f5">Оплата со стола</li>
+        <li data-i18n="ops.f6">Интеграция с системой ресторана</li>
+        <li data-i18n="ops.f7">Мультиязычный интерфейс</li>
+        <li data-i18n="ops.f8">Продвижение спецпредложений</li>
+        <li data-i18n="ops.f9">Программа лояльности</li>
+        <li data-i18n="ops.f10">Получение отзывов</li>
+        <li data-i18n="ops.f11">Аналитика продаж</li>
+        <li data-i18n="ops.f12">Удалённое управление контентом</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     ТАРИФЫ
+     ================================================================ -->
+<section class="section alt" id="pricing">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow" data-i18n="price.eyebrow">Тарифы</p>
+      <h2 data-i18n="price.title">Два тарифа</h2>
+      <p class="sec-sub" data-i18n="price.sub">Цена указана за одно устройство в месяц.</p>
+      <div class="seg seg-season" role="group" aria-label="Сезон">
+        <button type="button" class="seg-btn" data-season="low" data-i18n="price.low">Низкий сезон</button>
+        <button type="button" class="seg-btn" data-season="high" data-i18n="price.high">Высокий сезон</button>
+      </div>
+    </header>
+
+    <div class="plans">
+      <article class="plan reveal">
+        <div class="plan-top">
+          <h3 class="plan-name">Standard</h3>
+          <p class="plan-price"><span class="num" id="priceStd">10</span><small>USD<span data-i18n="price.per">/устройство в месяц</span></small></p>
+        </div>
+        <ul class="plan-list">
+          <li data-i18n="price.s1">Электронное меню</li>
+          <li data-i18n="price.s2">Вызов официанта</li>
+          <li data-i18n="price.s3">Запрос счёта</li>
+          <li data-i18n="price.s4">Мультиязычный интерфейс</li>
+          <li data-i18n="price.s5">Обслуживание оборудования</li>
+          <li data-i18n="price.s6">Гарантийная замена устройства</li>
+          <li data-i18n="price.s7">Реклама сети JET MEDIA</li>
+        </ul>
+        <a class="btn btn-line plan-cta" href="#request" data-request-type="install" data-i18n="price.ctaStd">Заказать установку</a>
+      </article>
+
+      <article class="plan plan-pro reveal">
+        <span class="plan-badge" data-i18n="price.badge">Максимум прибыли</span>
+        <div class="plan-top">
+          <h3 class="plan-name">Premium</h3>
+          <p class="plan-price"><span class="num" id="pricePrm">20</span><small>USD<span data-i18n="price.per">/устройство в месяц</span></small></p>
+          <p class="plan-note" data-i18n="price.all">Всё из Standard, плюс:</p>
+        </div>
+        <ul class="plan-list">
+          <li data-i18n="price.p1">Заказ со стола</li>
+          <li data-i18n="price.p2">Оплата со стола</li>
+          <li data-i18n="price.p3">Интеграция с системой ресторана</li>
+          <li data-i18n="price.p4">Продвижение спецпредложений</li>
+          <li data-i18n="price.p5">Программа лояльности</li>
+          <li data-i18n="price.p6">Получение отзывов</li>
+          <li data-i18n="price.p7">Расширенная аналитика продаж</li>
+          <li data-i18n="price.p8">Удалённое управление контентом</li>
+          <li data-i18n="price.p9">Без сторонней рекламы</li>
+        </ul>
+        <a class="btn btn-primary plan-cta" href="#request" data-request-type="demo" data-i18n="price.ctaPrm">Заказать демонстрацию</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FAQ
+     ================================================================ -->
+<section class="section" id="faq">
+  <div class="wrap wrap-narrow">
+    <header class="sec-head reveal">
+      <p class="eyebrow" data-i18n="faq.eyebrow">Вопросы</p>
+      <h2 data-i18n="faq.title">Что важно знать до установки</h2>
+    </header>
+
+    <div class="faq">
+      <details class="qa reveal">
+        <summary data-i18n="faq.q1">Что делать, если устройство сломалось?</summary>
+        <p data-i18n="faq.a1">При гарантийном случае меняем бесплатно. Если повреждение произошло по вине клиента, ремонт оплачивается отдельно.</p>
+      </details>
+      <details class="qa reveal">
+        <summary data-i18n="faq.q2">Нужно ли менять кассовую систему?</summary>
+        <p data-i18n="faq.a2">Нет. Мы интегрируемся с вашей системой управления: заказы уходят на кухню, меню, цены и стоп-листы синхронизируются автоматически.</p>
+      </details>
+      <details class="qa reveal">
+        <summary data-i18n="faq.q3">Можно ли отказаться?</summary>
+        <p data-i18n="faq.a3">Да, в любой момент. В конце оплаченного периода мы просто забираем оборудование.</p>
+      </details>
+      <details class="qa reveal">
+        <summary data-i18n="faq.q4">Сколько занимает установка?</summary>
+        <p data-i18n="faq.a4">Обычно от одного до трёх дней, включая настройку меню и обучение персонала.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     ФОРМА ЗАЯВКИ
+     ================================================================ -->
+<section class="section request" id="request">
+  <div class="wrap wrap-narrow">
+    <div class="req-card glass reveal">
+      <header class="req-head">
+        <h2 data-i18n="form.title">Оставьте заявку</h2>
+        <p data-i18n="form.sub">Свяжемся в течение рабочего дня, покажем систему вживую и посчитаем количество устройств для вашего зала.</p>
+      </header>
+
+      <div class="seg seg-type" role="group" aria-label="Тип заявки">
+        <button type="button" class="seg-btn is-active" data-type="demo" data-i18n="form.tDemo">Демонстрация</button>
+        <button type="button" class="seg-btn" data-type="install" data-i18n="form.tInstall">Установка</button>
+      </div>
+
+      <form class="form" id="leadForm" novalidate>
+        <div class="form-row">
+          <label class="lbl" for="fName" data-i18n="form.name">Имя</label>
+          <input class="inp" id="fName" name="name" type="text" autocomplete="name" required
+                 data-i18n-ph="form.namePh" placeholder="Как к вам обращаться">
+        </div>
+        <div class="form-row">
+          <label class="lbl" for="fPhone" data-i18n="form.phone">Телефон</label>
+          <input class="inp" id="fPhone" name="phone" type="tel" autocomplete="tel" required
+                 data-i18n-ph="form.phonePh" placeholder="+66 XX XXX XXXX">
+        </div>
+        <div class="form-row">
+          <label class="lbl" for="fRest" data-i18n="form.rest">Название ресторана</label>
+          <input class="inp" id="fRest" name="restaurant" type="text" required
+                 data-i18n-ph="form.restPh" placeholder="Например, Sunset Beach Cafe">
+        </div>
+
+        <!-- Honeypot: ловушка для ботов, человек это поле не видит -->
+        <input type="text" name="company" id="fTrap" class="trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <button class="btn btn-primary form-submit" type="submit" id="submitBtn" data-i18n="form.send">Отправить заявку</button>
+        <p class="form-hint" data-i18n="form.hint">Нажимая кнопку, вы соглашаетесь на обработку контактных данных для связи по заявке.</p>
+        <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================================================================
+     ПОДВАЛ
+     ================================================================ -->
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <div class="foot-brand">
+      <img class="logo logo-foot" src="logo.png" alt="JET MEDIA" width="1200" height="236" loading="lazy">
+      <p class="foot-slogan">REACHING EVERY HORIZON</p>
+      <p class="foot-tag" data-i18n="foot.tag">Цифровой официант, реклама и аналитика для ресторанов.</p>
+    </div>
+    <nav class="foot-links" aria-label="Разделы">
+      <a href="#calc" data-i18n="nav.calc">Калькулятор</a>
+      <a href="#ops" data-i18n="nav.ops">Возможности</a>
+      <a href="#pricing" data-i18n="nav.pricing">Тарифы</a>
+    </nav>
+    <div class="foot-contacts">
+      <p class="foot-rights">© <span id="year">2026</span> JET MEDIA</p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
