@@ -28,7 +28,7 @@ const CONFIG = {
      «Развернуть → Новое развёртывание → Веб-приложение».
      Заканчивается на /exec, а не на /dev.
      Настройка скрипта — в файле Code.gs и в README.             */
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzgexRZOoFHQC3JDfa6Z-Gfg4-Kp61lVLsLtU5ungWhcncnaDa60UAxCrlud0gfrBXl9A/exec",
+  appsScriptUrl: "PASTE_YOUR_WEB_APP_URL_HERE",
 
   /* --- Прирост выручки, % ----------------------------------------
      Обычные проценты, не доли: 6 — это 6%, 15 — это 15%.
@@ -180,6 +180,7 @@ const I18N = {
     "form.errFields": "Заполните имя, телефон и название ресторана.",
     "form.errPhone": "Проверьте номер телефона.",
     "form.errNet": "Не удалось отправить. Попробуйте ещё раз через минуту.",
+    "form.errConfig": "Форма пока не подключена к приёму заявок. Напишите нам напрямую.",
 
     "foot.tag": "Цифровой официант, реклама и аналитика для ресторанов."
   },
@@ -265,6 +266,7 @@ const I18N = {
     "form.errFields": "Please fill in name, phone and restaurant name.",
     "form.errPhone": "Please check the phone number.",
     "form.errNet": "Sending failed. Please try again in a minute.",
+    "form.errConfig": "The form is not connected yet. Please contact us directly.",
 
     "foot.tag": "Digital waiter, advertising and analytics for restaurants."
   },
@@ -350,6 +352,7 @@ const I18N = {
     "form.errFields": "กรุณากรอกชื่อ เบอร์โทร และชื่อร้าน",
     "form.errPhone": "กรุณาตรวจสอบเบอร์โทร",
     "form.errNet": "ส่งไม่สำเร็จ กรุณาลองใหม่อีกครั้งในอีกสักครู่",
+    "form.errConfig": "แบบฟอร์มยังไม่ได้เชื่อมต่อ กรุณาติดต่อเราโดยตรง",
 
     "foot.tag": "พนักงานเสิร์ฟดิจิทัล โฆษณา และการวิเคราะห์สำหรับร้านอาหาร"
   }
@@ -575,52 +578,99 @@ $$("[data-request-type]").forEach(link => {
   });
 });
 
-const urlReady = () =>
-  typeof CONFIG.appsScriptUrl === "string" &&
-  CONFIG.appsScriptUrl.indexOf("script.google.com") !== -1 &&
-  CONFIG.appsScriptUrl.indexOf("/exec") !== -1;
+/* Адрес нормализуем один раз: лишние пробелы и перевод строки
+   при копировании из Apps Script — обычное дело */
+CONFIG.appsScriptUrl = String(CONFIG.appsScriptUrl || "").trim();
+
+const URL_RE = /^https:\/\/script\.google\.com\/(a\/macros\/[^/]+|macros)\/s\/[\w-]+\/(exec|dev)/;
+const urlReady = () => URL_RE.test(CONFIG.appsScriptUrl);
 
 /**
- * Отправка заявки в Google Apps Script.
+ * КАНАЛ 1 — JSONP (основной).
  *
- * Шаг 1 — GET со всеми полями в строке запроса.
- *   Такой запрос не требует preflight-проверки CORS и не ломается
- *   на редиректе Apps Script, в том числе внутри WebView Telegram.
- *   Ответ читается, поэтому пользователю показывается честный итог.
+ * Браузер загружает ответ Apps Script как обычный <script>, а не через
+ * fetch. Тег <script> не подчиняется правилам CORS вообще: ни preflight,
+ * ни заголовков Access-Control не требуется, редирект Apps Script на
+ * script.googleusercontent.com отрабатывает штатно. Это единственный
+ * способ, который одинаково работает и в обычном браузере, и в WebView
+ * Telegram, и при этом возвращает подтверждение от сервера.
  *
- * Шаг 2 — если ответ не удалось прочитать, POST в режиме no-cors.
- *   Ответ недоступен, но строка в таблице появится и сообщение уйдёт.
+ * Скрипт должен отвечать вызовом функции: за это отвечает параметр
+ * callback в Code.gs. Если вы обновили Code.gs, не забудьте развернуть
+ * НОВУЮ ВЕРСИЮ веб-приложения — иначе ответа не будет.
  *
- * Диагностика: откройте страницу с ?debug=1 и следите за консолью,
- * либо вызовите JM.testLead() — уйдёт тестовая заявка.
+ * @returns {Promise<boolean|null>} true/false — ответ получен,
+ *          null — ответа нет, имеет смысл попробовать следующий канал
  */
-async function sendViaAppsScript(payload){
-  const url = CONFIG.appsScriptUrl + "?" + new URLSearchParams(payload).toString();
-  log("GET →", url);
+function sendViaJsonp(payload, timeoutMs = 15000){
+  return new Promise(resolve => {
+    const cbName = "jm_cb_" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+    const params = new URLSearchParams(Object.assign({}, payload, { callback: cbName }));
+    const script = document.createElement("script");
+    let finished = false;
 
+    const cleanup = () => {
+      finished = true;
+      clearTimeout(timer);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+
+    window[cbName] = data => {
+      if (finished) return;
+      log("JSONP ответ:", data);
+      cleanup();
+      if (data && data.ok !== true) console.warn("JET MEDIA: Apps Script ответил ошибкой:", data);
+      resolve(Boolean(data && data.ok === true));
+    };
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      console.warn("JET MEDIA: Apps Script не ответил за " + timeoutMs + " мс. " +
+                   "Проверьте, что развёрнута новая версия скрипта с поддержкой callback.");
+      cleanup();
+      resolve(null);
+    }, timeoutMs);
+
+    script.onerror = () => {
+      if (finished) return;
+      console.warn("JET MEDIA: браузер не смог загрузить ответ Apps Script. " +
+                   "Чаще всего это доступ к веб-приложению: должно быть «У всех».");
+      cleanup();
+      resolve(null);
+    };
+
+    script.src = CONFIG.appsScriptUrl + (CONFIG.appsScriptUrl.indexOf("?") === -1 ? "?" : "&") + params.toString();
+    log("JSONP →", script.src);
+    document.head.appendChild(script);
+  });
+}
+
+/**
+ * КАНАЛ 2 — обычный GET через fetch.
+ * Работает, когда ответ Apps Script приходит с заголовками CORS.
+ * @returns {Promise<boolean|null>} null — ответ прочитать не удалось
+ */
+async function sendViaFetch(payload){
+  const url = CONFIG.appsScriptUrl + "?" + new URLSearchParams(payload).toString();
   try {
     const res  = await fetch(url, { method: "GET", redirect: "follow" });
     const text = await res.text();
-    log("ответ:", res.status, text.slice(0, 200));
-
-    let data = null;
-    try { data = JSON.parse(text); } catch (e) { /* пришёл не JSON */ }
-
-    if (data && data.ok === true) return true;
-
-    if (!data){
-      console.warn("JET MEDIA: Apps Script вернул не JSON. Обычно это значит, " +
-                   "что у веб-приложения нет доступа «У всех» или развёрнута старая версия.");
-    } else {
-      console.warn("JET MEDIA: Apps Script ответил ошибкой:", data);
-    }
+    log("fetch ответ:", res.status, text.slice(0, 200));
+    const data = JSON.parse(text);
+    return data.ok === true;
   } catch (err) {
-    console.warn("JET MEDIA: GET-запрос не прошёл:", err);
+    log("fetch не прошёл:", err);
+    return null;
   }
+}
 
-  // Запасной канал
+/**
+ * КАНАЛ 3 — POST без чтения ответа.
+ * Последняя попытка: подтверждения не будет, но заявка дойдёт.
+ */
+async function sendViaBeacon(payload){
   try {
-    log("пробуем POST no-cors");
     await fetch(CONFIG.appsScriptUrl, {
       method: "POST",
       mode: "no-cors",
@@ -628,9 +678,10 @@ async function sendViaAppsScript(payload){
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
+    log("POST no-cors отправлен (ответ недоступен)");
     return true;
-  } catch (err2) {
-    console.error("JET MEDIA: POST тоже не прошёл:", err2);
+  } catch (err) {
+    console.error("JET MEDIA: POST тоже не прошёл:", err);
     return false;
   }
 }
@@ -658,16 +709,31 @@ async function sendDirectToTelegram(payload){
   return Boolean(data.ok);
 }
 
-/* Выбор канала: Apps Script → прямой Bot API → ничего */
+/* Порядок каналов: JSONP → fetch GET → POST no-cors → прямой Bot API.
+   Возвращает "unset", если адрес приёма заявок вообще не задан —
+   на странице покажется отдельное сообщение, а не «ошибка сети». */
 async function sendLead(payload){
-  if (urlReady()) return sendViaAppsScript(payload);
-  if (CONFIG.botToken && CONFIG.chatId) return sendDirectToTelegram(payload);
+  if (!urlReady()){
+    if (CONFIG.botToken && CONFIG.chatId) return sendDirectToTelegram(payload);
+    console.error(
+      "JET MEDIA: заявка никуда не ушла — CONFIG.appsScriptUrl задан неверно.\n" +
+      "Сейчас там: " + (CONFIG.appsScriptUrl || "пусто") + "\n" +
+      "Ожидается ссылка вида https://script.google.com/macros/s/AKfycb.../exec"
+    );
+    return "unset";
+  }
 
-  console.error(
-    "JET MEDIA: заявка никуда не ушла — в CONFIG.appsScriptUrl не указан адрес веб-приложения.\n" +
-    "Ожидается ссылка вида https://script.google.com/macros/s/AKfycb.../exec"
-  );
-  return false;
+  if (CONFIG.appsScriptUrl.indexOf("/dev") !== -1){
+    console.warn("JET MEDIA: указан адрес /dev — он работает только у владельца скрипта. Нужен /exec.");
+  }
+
+  const viaJsonp = await sendViaJsonp(payload);
+  if (viaJsonp !== null) return viaJsonp;
+
+  const viaFetch = await sendViaFetch(payload);
+  if (viaFetch !== null) return viaFetch;
+
+  return sendViaBeacon(payload);
 }
 
 /* Снимок калькулятора уходит вместе с заявкой: менеджер видит
@@ -720,9 +786,16 @@ form.addEventListener("submit", async e => {
   statusEl.textContent = dict["form.sending"];
 
   try {
-    const ok = await sendLead(payload);
-    statusEl.textContent = ok ? dict["form.ok"] : dict["form.errNet"];
+    const result = await sendLead(payload);
+    const ok = result === true;
+
+    // "unset" — адрес приёма заявок не задан. Владельцу сайта важно
+    // видеть это отдельно от обычной ошибки сети.
+    statusEl.textContent = result === "unset" ? dict["form.errConfig"]
+                         : ok                 ? dict["form.ok"]
+                                              : dict["form.errNet"];
     statusEl.className = "form-status " + (ok ? "ok" : "bad");
+
     if (ok){
       form.reset();
       $$(".inp").forEach(i => i.classList.remove("err"));
@@ -795,12 +868,44 @@ $("#year").textContent = new Date().getFullYear();
 })();
 
 /* Отладочный доступ из консоли браузера:
-     JM.config             — текущие настройки
-     JM.testLead()         — отправить тестовую заявку
-     JM.recalc()           — пересчитать калькулятор                */
+     JM.config       — текущие настройки
+     JM.diagnose()   — проверить приём заявок по шагам
+     JM.testLead()   — отправить тестовую заявку
+     JM.recalc()     — пересчитать калькулятор                      */
 window.JM = {
   config: CONFIG,
   recalc: () => recalc(false),
+
+  /* Пошаговая проверка канала заявок. Печатает, что именно не так. */
+  diagnose: async () => {
+    const line = (label, value) => console.log("  " + label.padEnd(22) + value);
+    console.log("%cJET MEDIA — проверка приёма заявок", "color:#46C7FF;font-weight:700");
+
+    line("адрес:", CONFIG.appsScriptUrl || "не задан");
+    if (!urlReady()){
+      console.log("%c  формат адреса неверный", "color:#FF8F9B");
+      console.log("  ожидается: https://script.google.com/macros/s/AKfycb.../exec");
+      return false;
+    }
+    line("формат:", "ок");
+    if (CONFIG.appsScriptUrl.indexOf("/dev") !== -1) line("внимание:", "адрес /dev вместо /exec");
+
+    const payload = Object.assign({
+      type: "demo", name: "Проверка связи", phone: "+66 00 000 0000",
+      restaurant: "JM diagnose", lang, page: location.href
+    }, calcSnapshot());
+
+    const jsonp = await sendViaJsonp(payload, 15000);
+    line("JSONP:", jsonp === null ? "ответа нет" : jsonp ? "ок, заявка принята" : "скрипт вернул ошибку");
+    if (jsonp === true) return true;
+
+    console.log("  Что проверить в Apps Script:");
+    console.log("   1. Развернуть → Управление развёртываниями → Версия «Новая версия»");
+    console.log("   2. Доступ к веб-приложению: «У всех», запуск от вашего имени");
+    console.log("   3. Code.gs должен быть свежий — с поддержкой параметра callback");
+    console.log("   4. Откройте в браузере: " + CONFIG.appsScriptUrl + "?name=Тест&phone=+66000000000&restaurant=Test");
+    return false;
+  },
   testLead: () => sendLead(Object.assign({
     type: "demo",
     name: "Тестовая заявка",
