@@ -28,7 +28,7 @@ const CONFIG = {
      «Развернуть → Новое развёртывание → Веб-приложение».
      Заканчивается на /exec, а не на /dev.
      Настройка скрипта — в файле Code.gs и в README.             */
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzgexRZOoFHQC3JDfa6Z-Gfg4-Kp61lVLsLtU5ungWhcncnaDa60UAxCrlud0gfrBXl9A/exec",
+  appsScriptUrl: "PASTE_YOUR_WEB_APP_URL_HERE",
 
   /* --- Прирост выручки, % ----------------------------------------
      Обычные проценты, не доли: 6 — это 6%, 15 — это 15%.
@@ -52,20 +52,22 @@ const CONFIG = {
   trialMonths: 2,
 
   /* --- Ценообразование (SaaS-подписка + устройства) ---------------
-     Модель: абонентская плата за ресторан + N устройств входит
-     бесплатно + каждое устройство сверх лимита — отдельной строкой.
+     Модель: абонплата покрывает первые N устройств ресторана,
+     каждое устройство сверх этого лимита — отдельной доплатой.
      Premium стоит ровно в 2 раза дороже Standard на любом шаге —
      формула считает это сама, отдельно вводить премиум-цены не нужно.
 
-     subscription   — абонплата за ресторан в месяц, THB, тариф Standard
-     includedDevices — сколько устройств входит в подписку бесплатно
-     extraDevice    — доплата за каждое устройство сверх лимита, THB/мес, Standard
+     subscription    — абонплата за ресторан в месяц, THB, тариф Standard.
+                       Это цена уже за includedDevices устройств, а не за одно.
+     includedDevices — сколько устройств покрывает эта абонплата
+     extraDevice     — доплата за каждое устройство СВЕРХ этого лимита,
+                       THB/мес, тариф Standard
 
      Sезон определяется календарём Пхукета:
      высокий — ноябрь–март, низкий — апрель–октябрь.                */
   pricing: {
-    low:  { subscription: 1900, includedDevices: 2, extraDevice: 240 },
-    high: { subscription: 5800, includedDevices: 2, extraDevice: 590 }
+    low:  { subscription: 1900, includedDevices: 10, extraDevice: 240 },
+    high: { subscription: 5800, includedDevices: 10, extraDevice: 590 }
   },
 
   /* --- Множитель тарифа Premium ------------------------------------
@@ -90,7 +92,7 @@ const CONFIG = {
      Меняйте границы и значения по умолчанию здесь: разметка
      подстроится сама.                                             */
   sliders: {
-    tables: { min: 5,   max: 50,    step: 1,  value: 20   },
+    tables: { min: 5,   max: 50,    step: 1,  value: 10   },
     guests: { min: 200, max: 15000, step: 50, value: 1800 },
     check:  { min: 100, max: 5000,  step: 10, value: 850  }
   },
@@ -174,9 +176,9 @@ const I18N = {
     "ops.f11": "Аналитика продаж", "ops.f12": "Удалённое управление контентом",
 
     "price.eyebrow": "Тарифы", "price.title": "Два тарифа",
-    "price.subA": "Абонентская плата за ресторан.", "price.subB": "устройства включены, дальше — доплата за каждое сверх лимита.",
+    "price.subA": "Абонентская плата уже включает", "price.subB": "устройств. Каждое сверх этого числа — отдельной доплатой.",
     "price.low": "Низкий сезон", "price.high": "Высокий сезон",
-    "price.per": "в месяц", "price.example": "Пример для ресторана на", "price.devicesWord": "устройств",
+    "price.per": "в месяц", "price.example": "За ресторан с", "price.devicesWord": "устройствами",
     "price.all": "Всё из Standard, плюс:", "price.badge": "Максимум прибыли",
     "price.s1": "Аренда оборудования",
     "price.s2": "Программное обеспечение",
@@ -259,9 +261,9 @@ const I18N = {
     "ops.f11": "Sales analytics", "ops.f12": "Remote content management",
 
     "price.eyebrow": "Pricing", "price.title": "Two plans",
-    "price.subA": "Monthly subscription per restaurant.", "price.subB": "devices are included, extra devices are billed separately.",
+    "price.subA": "The subscription already covers", "price.subB": "devices. Anything beyond that is billed separately.",
     "price.low": "Low season", "price.high": "High season",
-    "price.per": "per month", "price.example": "Example for a restaurant with", "price.devicesWord": "devices",
+    "price.per": "per month", "price.example": "For a restaurant with", "price.devicesWord": "devices",
     "price.all": "Everything in Standard, plus:", "price.badge": "Maximum profit",
     "price.s1": "Equipment rental",
     "price.s2": "Software",
@@ -344,9 +346,9 @@ const I18N = {
     "ops.f11": "วิเคราะห์ยอดขาย", "ops.f12": "จัดการเนื้อหาจากระยะไกล",
 
     "price.eyebrow": "แพ็กเกจ", "price.title": "สองแพ็กเกจ",
-    "price.subA": "ค่าสมาชิกรายเดือนต่อร้าน รวมอุปกรณ์", "price.subB": "เครื่อง เครื่องที่เกินคิดค่าใช้จ่ายเพิ่ม",
+    "price.subA": "ค่าสมาชิกรายเดือนครอบคลุมอุปกรณ์", "price.subB": "เครื่อง เครื่องที่เกินคิดค่าใช้จ่ายเพิ่มแยกต่างหาก",
     "price.low": "โลว์ซีซัน", "price.high": "ไฮซีซัน",
-    "price.per": "ต่อเดือน", "price.example": "ตัวอย่างสำหรับร้านที่มี", "price.devicesWord": "เครื่อง",
+    "price.per": "ต่อเดือน", "price.example": "สำหรับร้านที่มี", "price.devicesWord": "เครื่อง",
     "price.all": "ทุกอย่างใน Standard และเพิ่ม:", "price.badge": "กำไรสูงสุด",
     "price.s1": "ค่าเช่าอุปกรณ์",
     "price.s2": "ซอฟต์แวร์",
