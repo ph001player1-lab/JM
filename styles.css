@@ -294,6 +294,8 @@ input[type=range]::-moz-range-thumb{
 }
 .res-label{ font-size:.8rem; color:var(--muted); display:flex; gap:7px; align-items:baseline; }
 .res-label em{ font-style:normal; font-size:.72rem; color:var(--electric); }
+.res-cap{ margin-top:10px; font-size:.72rem; color:var(--muted); }
+.res-cap + .res-value{ margin-top:2px; }
 .res-value{ font-size:clamp(1.25rem, 2.4vw, 1.62rem); margin-top:8px; color:var(--white); }
 .res-pro .res-value{ color:var(--electric); }
 
@@ -380,7 +382,7 @@ input[type=range]::-moz-range-thumb{
 }
 
 /* ---------------- 12. Тарифы ---------------- */
-.plans{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+.plans{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch; }
 .plan{
   position:relative; padding:34px 30px 30px;
   border:1px solid var(--line); border-radius:var(--r-l);
@@ -402,10 +404,12 @@ input[type=range]::-moz-range-thumb{
 .plan-name{ font-size:1.3rem; }
 .plan-price{ display:flex; align-items:baseline; gap:10px; margin-top:14px; }
 .plan-price span:first-child{
-  font-size:clamp(2.3rem, 4.4vw, 3.05rem); line-height:1; color:var(--electric);
+  font-size:clamp(1.75rem, 3.4vw, 2.5rem); line-height:1.05; color:var(--electric);
+  white-space:nowrap;
 }
 .plan-price small{ display:flex; flex-direction:column; font-size:.76rem; color:var(--muted); }
 .plan-note{ margin-top:14px; font-size:.86rem; color:var(--electric); }
+.plan-example{ margin-top:10px; font-size:.8rem; color:var(--muted); }
 .plan-list{ display:grid; gap:12px; }
 .plan-list li{ position:relative; padding-left:26px; font-size:.92rem; color:var(--muted); }
 .plan-list li::before{
@@ -415,6 +419,15 @@ input[type=range]::-moz-range-thumb{
   transform:rotate(-45deg);
 }
 .plan-cta{ margin-top:auto; width:100%; }
+
+/* Сноска под тарифами: доплата за устройства и бесплатный период */
+.plans-note{
+  margin-top:18px; padding:18px 22px;
+  border:1px solid var(--line-soft); border-radius:var(--r-m);
+  background:rgba(255,255,255,.02);
+  font-size:.85rem; color:var(--muted); line-height:1.7;
+}
+.plans-note [data-claim]{ color:var(--electric); font-weight:600; }
 
 /* ---------------- 13. FAQ ---------------- */
 .faq{ display:grid; gap:8px; }

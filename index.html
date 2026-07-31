@@ -190,18 +190,20 @@
       <div class="calc-result">
         <div class="res">
           <p class="res-label"><span data-i18n="calc.standard">Standard</span> <em class="num" data-claim="uplift-std">+6%</em></p>
+          <p class="res-cap" data-i18n="calc.gain">Прирост выручки</p>
           <p class="res-value num" id="rStd">+91 800 ฿</p>
           <div class="res-rows">
-            <p class="res-row"><span data-i18n="calc.rent">Аренда оборудования</span><b class="num" id="costStd">−7 200 ฿</b></p>
-            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netStd">+84 600 ฿</b></p>
+            <p class="res-row"><span data-i18n="calc.rent">Абонентская плата</span><b class="num" id="costStd">−6 220 ฿</b></p>
+            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netStd">+85 580 ฿</b></p>
           </div>
         </div>
         <div class="res res-pro">
           <p class="res-label"><span data-i18n="calc.premium">Premium</span> <em class="num" data-claim="uplift-prm">+15%</em></p>
+          <p class="res-cap" data-i18n="calc.gain">Прирост выручки</p>
           <p class="res-value num" id="rPrm">+229 500 ฿</p>
           <div class="res-rows">
-            <p class="res-row"><span data-i18n="calc.rent">Аренда оборудования</span><b class="num" id="costPrm">−14 400 ฿</b></p>
-            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netPrm">+215 100 ฿</b></p>
+            <p class="res-row"><span data-i18n="calc.rent">Абонентская плата</span><b class="num" id="costPrm">−12 440 ฿</b></p>
+            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netPrm">+217 060 ฿</b></p>
           </div>
         </div>
       </div>
@@ -266,7 +268,7 @@
     <header class="sec-head reveal">
       <p class="eyebrow" data-i18n="price.eyebrow">Тарифы</p>
       <h2 data-i18n="price.title">Два тарифа</h2>
-      <p class="sec-sub" data-i18n="price.sub">Цена указана за одно устройство в месяц.</p>
+      <p class="sec-sub"><span data-i18n="price.subA">Абонентская плата за ресторан.</span> <span data-claim="included-devices">2</span> <span data-i18n="price.subB">устройства включены, дальше — доплата за каждое сверх лимита.</span></p>
       <div class="seg seg-season" role="group" aria-label="Сезон">
         <button type="button" class="seg-btn" data-season="low" data-i18n="price.low">Низкий сезон</button>
         <button type="button" class="seg-btn" data-season="high" data-i18n="price.high">Высокий сезон</button>
@@ -277,16 +279,19 @@
       <article class="plan reveal">
         <div class="plan-top">
           <h3 class="plan-name">Standard</h3>
-          <p class="plan-price"><span class="num" id="priceStd">10</span><small>USD<span data-i18n="price.per">/устройство в месяц</span></small></p>
+          <p class="plan-price"><span class="num" id="priceStd">3 820 ฿</span><small><span data-i18n="price.per">в месяц</span></small></p>
+          <p class="plan-example"><span data-i18n="price.example">Пример для ресторана на</span> <span data-claim="sample-devices">10</span> <span data-i18n="price.devicesWord">устройств</span></p>
         </div>
         <ul class="plan-list">
-          <li data-i18n="price.s1">Электронное меню</li>
-          <li data-i18n="price.s2">Вызов официанта</li>
-          <li data-i18n="price.s3">Запрос счёта</li>
-          <li data-i18n="price.s4">Мультиязычный интерфейс</li>
-          <li data-i18n="price.s5">Обслуживание оборудования</li>
-          <li data-i18n="price.s6">Гарантийная замена устройства</li>
-          <li data-i18n="price.s7">Реклама сети JET MEDIA</li>
+          <li data-i18n="price.s1">Аренда оборудования</li>
+          <li data-i18n="price.s2">Программное обеспечение</li>
+          <li data-i18n="price.s3">Искусственный интеллект</li>
+          <li data-i18n="price.s4">Регулярные обновления</li>
+          <li data-i18n="price.s5">Техническая поддержка</li>
+          <li data-i18n="price.s6">Облачная инфраструктура</li>
+          <li data-i18n="price.s7">Удалённое управление устройствами</li>
+          <li data-i18n="price.s8">Аналитика</li>
+          <li data-i18n="price.s9">Управление меню и контентом</li>
         </ul>
         <a class="btn btn-line plan-cta" href="#request" data-request-type="install" data-i18n="price.ctaStd">Заказать установку</a>
       </article>
@@ -295,23 +300,22 @@
         <span class="plan-badge" data-i18n="price.badge">Максимум прибыли</span>
         <div class="plan-top">
           <h3 class="plan-name">Premium</h3>
-          <p class="plan-price"><span class="num" id="pricePrm">20</span><small>USD<span data-i18n="price.per">/устройство в месяц</span></small></p>
+          <p class="plan-price"><span class="num" id="pricePrm">7 640 ฿</span><small><span data-i18n="price.per">в месяц</span></small></p>
           <p class="plan-note" data-i18n="price.all">Всё из Standard, плюс:</p>
         </div>
         <ul class="plan-list">
-          <li data-i18n="price.p1">Заказ со стола</li>
-          <li data-i18n="price.p2">Оплата со стола</li>
-          <li data-i18n="price.p3">Интеграция с системой ресторана</li>
-          <li data-i18n="price.p4">Продвижение спецпредложений</li>
-          <li data-i18n="price.p5">Программа лояльности</li>
-          <li data-i18n="price.p6">Получение отзывов</li>
-          <li data-i18n="price.p7">Расширенная аналитика продаж</li>
-          <li data-i18n="price.p8">Удалённое управление контентом</li>
-          <li data-i18n="price.p9">Без сторонней рекламы</li>
+          <li data-i18n="price.p1">Без рекламы сети JET MEDIA</li>
         </ul>
         <a class="btn btn-primary plan-cta" href="#request" data-request-type="demo" data-i18n="price.ctaPrm">Заказать демонстрацию</a>
       </article>
     </div>
+
+    <p class="plans-note reveal">
+      <span data-i18n="price.extraA">Каждое устройство сверх включённых:</span>
+      <span data-claim="extra-low">240 ฿</span><span data-i18n="price.extraB">/мес в низкий сезон,</span>
+      <span data-claim="extra-high">590 ฿</span><span data-i18n="price.extraC">/мес в высокий.</span>
+      <span data-i18n="price.extraD">Первые</span> <span data-claim="trial-months">2</span> <span data-i18n="price.extraE">месяца — бесплатно, включая установку и обучение персонала.</span>
+    </p>
   </div>
 </section>
 
