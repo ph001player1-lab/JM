@@ -28,7 +28,7 @@ const CONFIG = {
      «Развернуть → Новое развёртывание → Веб-приложение».
      Заканчивается на /exec, а не на /dev.
      Настройка скрипта — в файле Code.gs и в README.             */
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzgexRZOoFHQC3JDfa6Z-Gfg4-Kp61lVLsLtU5ungWhcncnaDa60UAxCrlud0gfrBXl9A/exec",
+  appsScriptUrl: "PASTE_YOUR_WEB_APP_URL_HERE",
 
   /* --- Прирост выручки, % ----------------------------------------
      Обычные проценты, не доли: 6 — это 6%, 15 — это 15%.
@@ -52,34 +52,34 @@ const CONFIG = {
   trialMonths: 2,
 
   /* --- Ценообразование (SaaS-подписка + устройства) ---------------
-     Модель: абонплата покрывает первые N устройств ресторана,
-     каждое устройство сверх этого лимита — отдельной доплатой.
-     Premium стоит ровно в 2 раза дороже Standard на любом шаге —
-     формула считает это сама, отдельно вводить премиум-цены не нужно.
+     Стоимость складывается из двух НЕЗАВИСИМЫХ частей:
 
-     subscription    — абонплата за ресторан в месяц, THB, тариф Standard.
-                       Это цена уже за includedDevices устройств, а не за одно.
-     includedDevices — сколько устройств покрывает эта абонплата
-     extraDevice     — доплата за каждое устройство СВЕРХ этого лимита,
-                       THB/мес, тариф Standard
+       1) абонентская плата за платформу (SaaS) — за ресторан целиком,
+          от количества столиков не зависит;
+       2) аренда устройств — первые freeDevices устройств бесплатно,
+          каждое следующее оплачивается отдельно.
 
-     Sезон определяется календарём Пхукета:
+     Premium дороже Standard ровно в premiumMultiplier раз в обеих
+     частях сразу: и абонплата, и цена устройства. Отдельно премиум-цены
+     вводить не нужно, формула считает их сама.
+
+     subscription — абонплата за платформу, THB/мес, тариф Standard
+     freeDevices  — сколько устройств даётся бесплатно при подключении
+     devicePrice  — аренда ОДНОГО устройства сверх бесплатных,
+                    THB/мес, тариф Standard
+
+     Сезон определяется календарём Пхукета:
      высокий — ноябрь–март, низкий — апрель–октябрь.                */
   pricing: {
-    low:  { subscription: 1900, includedDevices: 10, extraDevice: 240 },
-    high: { subscription: 5800, includedDevices: 10, extraDevice: 590 }
+    low:  { subscription: 1900, freeDevices: 2, devicePrice: 240 },
+    high: { subscription: 5800, freeDevices: 2, devicePrice: 590 }
   },
 
   /* --- Множитель тарифа Premium ------------------------------------
-     Premium = Standard × premiumMultiplier на любом количестве
-     устройств и в любом сезоне. Единственное отличие тарифов —
-     набор функций (списки в разметке), не цена сама по себе.       */
+     Premium = Standard × premiumMultiplier и по абонплате, и по
+     аренде устройств. Отличие тарифов по функциям — в списках
+     разметки, на цену они не влияют.                               */
   premiumMultiplier: 2,
-
-  /* --- Количество устройств для примера «средний ресторан» --------
-     Используется в карточках тарифов, где показывается одна
-     ориентировочная цена, а не диапазон из калькулятора.           */
-  sampleDevices: 10,
 
   /* --- Курс для пересчёта THB → USD, если он где-то понадобится ---
      Сейчас все цены и так в THB, переменная оставлена про запас. */
@@ -92,7 +92,7 @@ const CONFIG = {
      Меняйте границы и значения по умолчанию здесь: разметка
      подстроится сама.                                             */
   sliders: {
-    tables: { min: 5,   max: 50,    step: 1,  value: 10   },
+    tables: { min: 1,   max: 50,    step: 1,  value: 10   },
     guests: { min: 200, max: 15000, step: 50, value: 1800 },
     check:  { min: 100, max: 5000,  step: 10, value: 850  }
   },
@@ -120,17 +120,40 @@ const CONFIG = {
 const DEBUG = CONFIG.debug || location.search.indexOf("debug=1") !== -1;
 const log = (...args) => { if (DEBUG) console.log("%cJET MEDIA", "color:#46C7FF", ...args); };
 
-/**
- * Стоимость подписки Standard за месяц для заданного числа устройств и сезона.
- * Формула: абонплата за ресторан + (устройства сверх включённых) × доплата.
- * Premium получается умножением результата на CONFIG.premiumMultiplier —
- * так исключена возможность рассинхронизации цен двух тарифов.
- */
-function subscriptionPrice(devices, season, tier){
-  const p = CONFIG.pricing[season];
-  const extra = Math.max(0, devices - p.includedDevices);
-  const standard = p.subscription + extra * p.extraDevice;
-  return tier === "premium" ? standard * CONFIG.premiumMultiplier : standard;
+/* -----------------------------------------------------------------
+   Расчёт стоимости. Три функции вместо одной: на сайте абонплата
+   и аренда устройств показываются раздельно, поэтому и считаются
+   раздельно, а итог — их сумма.
+   ----------------------------------------------------------------- */
+
+/** Множитель тарифа: Standard — 1, Premium — CONFIG.premiumMultiplier. */
+function tierMultiplier(tier){
+  return tier === "premium" ? CONFIG.premiumMultiplier : 1;
+}
+
+/** Абонентская плата за платформу. От числа столиков не зависит. */
+function saasFee(season, tier){
+  return CONFIG.pricing[season].subscription * tierMultiplier(tier);
+}
+
+/** Сколько устройств оплачивается: первые freeDevices бесплатно. */
+function billableDevices(devices){
+  return Math.max(0, devices - CONFIG.pricing.low.freeDevices);
+}
+
+/** Аренда устройств сверх бесплатных. */
+function deviceFee(devices, season, tier){
+  return billableDevices(devices) * CONFIG.pricing[season].devicePrice * tierMultiplier(tier);
+}
+
+/** Цена одного оплачиваемого устройства — для карточек тарифов. */
+function devicePrice(season, tier){
+  return CONFIG.pricing[season].devicePrice * tierMultiplier(tier);
+}
+
+/** Итого в месяц: абонплата + аренда устройств. */
+function totalFee(devices, season, tier){
+  return saasFee(season, tier) + deviceFee(devices, season, tier);
 }
 
 /* =================================================================
@@ -158,7 +181,11 @@ const I18N = {
     "calc.season": "Сезон подписки",
     "calc.current": "Текущая выручка",
     "calc.standard": "Standard", "calc.premium": "Premium",
-    "calc.gain": "Прирост выручки", "calc.rent": "Абонентская плата", "calc.net": "Чистый результат",
+    "calc.gain": "Прирост выручки",
+    "calc.saas": "Абонентская плата (SaaS)",
+    "calc.devices": "Аренда устройств",
+    "calc.totalMonth": "Итого в месяц", "calc.totalYear": "Итого за год",
+    "calc.net": "Чистый результат",
 
     "ops.eyebrow": "Что получает ресторан",
     "ops.title": "Не только продажи — вся операционка стола",
@@ -176,9 +203,12 @@ const I18N = {
     "ops.f11": "Аналитика продаж", "ops.f12": "Удалённое управление контентом",
 
     "price.eyebrow": "Тарифы", "price.title": "Два тарифа",
-    "price.subA": "Абонентская плата уже включает", "price.subB": "устройств. Каждое сверх этого числа — отдельной доплатой.",
+    "price.sub": "Стоимость складывается из двух частей: абонентская плата за платформу и аренда устройств.",
     "price.low": "Низкий сезон", "price.high": "Высокий сезон",
-    "price.per": "в месяц", "price.example": "За ресторан с", "price.devicesWord": "устройствами",
+    "price.per": "в месяц", "price.saasNote": "Абонентская плата за платформу",
+    "price.devicesK": "Устройства",
+    "price.freeDevices": "устройства — бесплатно",
+    "price.then": "Далее", "price.perDevice": "за устройство в месяц",
     "price.all": "Всё из Standard, плюс:", "price.badge": "Максимум прибыли",
     "price.s1": "Аренда оборудования",
     "price.s2": "Программное обеспечение",
@@ -191,11 +221,7 @@ const I18N = {
     "price.s9": "Управление меню и контентом",
     "price.p1": "Без рекламы сети JET MEDIA",
     "price.ctaStd": "Заказать установку", "price.ctaPrm": "Заказать демонстрацию",
-    "price.extraA": "Каждое устройство сверх включённых:",
-    "price.extraB": "/мес в низкий сезон,",
-    "price.extraC": "/мес в высокий.",
-    "price.extraD": "Первые",
-    "price.extraE": "месяца — бесплатно, включая установку и обучение персонала.",
+    "price.trialA": "Первые", "price.trialB": "месяца — бесплатно, включая установку и обучение персонала.",
 
     "faq.eyebrow": "Вопросы", "faq.title": "Что важно знать до установки",
     "faq.q1": "Что делать, если устройство сломалось?",
@@ -243,7 +269,11 @@ const I18N = {
     "calc.season": "Subscription season",
     "calc.current": "Current revenue",
     "calc.standard": "Standard", "calc.premium": "Premium",
-    "calc.gain": "Revenue uplift", "calc.rent": "Subscription fee", "calc.net": "Net result",
+    "calc.gain": "Revenue uplift",
+    "calc.saas": "Subscription (SaaS)",
+    "calc.devices": "Device rental",
+    "calc.totalMonth": "Total per month", "calc.totalYear": "Total per year",
+    "calc.net": "Net result",
 
     "ops.eyebrow": "What the restaurant gets",
     "ops.title": "Not just sales — the whole table operation",
@@ -261,9 +291,12 @@ const I18N = {
     "ops.f11": "Sales analytics", "ops.f12": "Remote content management",
 
     "price.eyebrow": "Pricing", "price.title": "Two plans",
-    "price.subA": "The subscription already covers", "price.subB": "devices. Anything beyond that is billed separately.",
+    "price.sub": "The price has two parts: a platform subscription and device rental.",
     "price.low": "Low season", "price.high": "High season",
-    "price.per": "per month", "price.example": "For a restaurant with", "price.devicesWord": "devices",
+    "price.per": "per month", "price.saasNote": "Platform subscription",
+    "price.devicesK": "Devices",
+    "price.freeDevices": "devices are free",
+    "price.then": "Then", "price.perDevice": "per device per month",
     "price.all": "Everything in Standard, plus:", "price.badge": "Maximum profit",
     "price.s1": "Equipment rental",
     "price.s2": "Software",
@@ -276,11 +309,7 @@ const I18N = {
     "price.s9": "Menu and content management",
     "price.p1": "No JET MEDIA network ads",
     "price.ctaStd": "Request installation", "price.ctaPrm": "Book a demo",
-    "price.extraA": "Each device beyond the included ones:",
-    "price.extraB": "/mo in low season,",
-    "price.extraC": "/mo in high season.",
-    "price.extraD": "The first",
-    "price.extraE": "months are free, including installation and staff training.",
+    "price.trialA": "The first", "price.trialB": "months are free, including installation and staff training.",
 
     "faq.eyebrow": "FAQ", "faq.title": "What to know before installation",
     "faq.q1": "What if a device breaks?",
@@ -328,7 +357,11 @@ const I18N = {
     "calc.season": "ฤดูกาลของแพ็กเกจ",
     "calc.current": "รายได้ปัจจุบัน",
     "calc.standard": "Standard", "calc.premium": "Premium",
-    "calc.gain": "รายได้ที่เพิ่มขึ้น", "calc.rent": "ค่าสมาชิกรายเดือน", "calc.net": "ผลลัพธ์สุทธิ",
+    "calc.gain": "รายได้ที่เพิ่มขึ้น",
+    "calc.saas": "ค่าบริการแพลตฟอร์ม (SaaS)",
+    "calc.devices": "ค่าเช่าอุปกรณ์",
+    "calc.totalMonth": "รวมต่อเดือน", "calc.totalYear": "รวมต่อปี",
+    "calc.net": "ผลลัพธ์สุทธิ",
 
     "ops.eyebrow": "สิ่งที่ร้านได้รับ",
     "ops.title": "ไม่ใช่แค่ยอดขาย แต่คือการดำเนินงานทั้งโต๊ะ",
@@ -346,9 +379,12 @@ const I18N = {
     "ops.f11": "วิเคราะห์ยอดขาย", "ops.f12": "จัดการเนื้อหาจากระยะไกล",
 
     "price.eyebrow": "แพ็กเกจ", "price.title": "สองแพ็กเกจ",
-    "price.subA": "ค่าสมาชิกรายเดือนครอบคลุมอุปกรณ์", "price.subB": "เครื่อง เครื่องที่เกินคิดค่าใช้จ่ายเพิ่มแยกต่างหาก",
+    "price.sub": "ราคาแบ่งเป็นสองส่วน: ค่าบริการแพลตฟอร์มและค่าเช่าอุปกรณ์",
     "price.low": "โลว์ซีซัน", "price.high": "ไฮซีซัน",
-    "price.per": "ต่อเดือน", "price.example": "สำหรับร้านที่มี", "price.devicesWord": "เครื่อง",
+    "price.per": "ต่อเดือน", "price.saasNote": "ค่าบริการแพลตฟอร์ม",
+    "price.devicesK": "อุปกรณ์",
+    "price.freeDevices": "เครื่องแรก ฟรี",
+    "price.then": "จากนั้น", "price.perDevice": "ต่อเครื่องต่อเดือน",
     "price.all": "ทุกอย่างใน Standard และเพิ่ม:", "price.badge": "กำไรสูงสุด",
     "price.s1": "ค่าเช่าอุปกรณ์",
     "price.s2": "ซอฟต์แวร์",
@@ -361,11 +397,7 @@ const I18N = {
     "price.s9": "จัดการเมนูและเนื้อหา",
     "price.p1": "ไม่มีโฆษณาของเครือข่าย JET MEDIA",
     "price.ctaStd": "ขอติดตั้ง", "price.ctaPrm": "ขอชมการสาธิต",
-    "price.extraA": "อุปกรณ์แต่ละเครื่องที่เกินจากที่รวมให้:",
-    "price.extraB": "/เดือน ในโลว์ซีซัน",
-    "price.extraC": "/เดือน ในไฮซีซัน",
-    "price.extraD": "ฟรี",
-    "price.extraE": "เดือนแรก รวมการติดตั้งและอบรมพนักงาน",
+    "price.trialA": "ฟรี", "price.trialB": "เดือนแรก รวมการติดตั้งและอบรมพนักงาน",
 
     "faq.eyebrow": "คำถามที่พบบ่อย", "faq.title": "สิ่งที่ควรรู้ก่อนติดตั้ง",
     "faq.q1": "ถ้าอุปกรณ์เสียต้องทำอย่างไร",
@@ -432,10 +464,7 @@ function renderClaims(){
     "relief":       "−" + pctNum(CONFIG.staffRelief) + "%",
     "launch-days":  CONFIG.launchDays,
     "trial-months": String(CONFIG.trialMonths),
-    "included-devices": String(CONFIG.pricing.low.includedDevices),
-    "extra-low":  money(CONFIG.pricing.low.extraDevice),
-    "extra-high": money(CONFIG.pricing.high.extraDevice),
-    "sample-devices": String(CONFIG.sampleDevices)
+    "free-devices": String(CONFIG.pricing.low.freeDevices)
   };
 
   const targets = $$("[data-claim]");
@@ -512,6 +541,8 @@ const oTables = $("#oTables"), oGuests = $("#oGuests"), oCheck = $("#oCheck");
 const rNow = $("#rNow");
 const rStd = $("#rStd"), costStd = $("#costStd"), netStd = $("#netStd");
 const rPrm = $("#rPrm"), costPrm = $("#costPrm"), netPrm = $("#netPrm");
+const saasStdEl = $("#saasStd"), devStdEl = $("#devStd");
+const saasPrmEl = $("#saasPrm"), devPrmEl = $("#devPrm");
 
 let period = CONFIG.defaultPeriod === "year" ? "year" : "month";
 let season = CONFIG.defaultSeason === "high" ? "high" : "low";
@@ -543,11 +574,14 @@ function recalc(instant){
   const gainStd = revenue * CONFIG.uplift.standard / 100;
   const gainPrm = revenue * CONFIG.uplift.premium / 100;
 
-  // Подписка Standard/Premium: абонплата + доплата за устройства сверх
-  // включённых двух. В месячном режиме — обычная сумма, в годовом
-  // умножается на 12 вместе с остальными результатами.
-  const rentStd = subscriptionPrice(tables, season, "standard") * months;
-  const rentPrm = subscriptionPrice(tables, season, "premium")  * months;
+  // Расходы разложены на две части: платформа и устройства.
+  // В годовом режиме обе умножаются на 12 вместе с выручкой.
+  const saasStd = saasFee(season, "standard") * months;
+  const saasPrm = saasFee(season, "premium")  * months;
+  const devStd  = deviceFee(tables, season, "standard") * months;
+  const devPrm  = deviceFee(tables, season, "premium")  * months;
+  const totStd  = saasStd + devStd;
+  const totPrm  = saasPrm + devPrm;
 
   oTables.textContent = plainN(tables);
   oGuests.textContent = plainN(guests);
@@ -558,16 +592,24 @@ function recalc(instant){
   animateNumber(rNow, revenue, money, dur);
 
   animateNumber(rStd, gainStd, plus, dur);
-  animateNumber(costStd, rentStd, minus, dur);
-  animateNumber(netStd, gainStd - rentStd, signed, dur);
+  animateNumber(saasStdEl, saasStd, minus, dur);
+  animateNumber(devStdEl, devStd, minus, dur);
+  animateNumber(costStd, totStd, minus, dur);
+  animateNumber(netStd, gainStd - totStd, signed, dur);
 
   animateNumber(rPrm, gainPrm, plus, dur);
-  animateNumber(costPrm, rentPrm, minus, dur);
-  animateNumber(netPrm, gainPrm - rentPrm, signed, dur);
+  animateNumber(saasPrmEl, saasPrm, minus, dur);
+  animateNumber(devPrmEl, devPrm, minus, dur);
+  animateNumber(costPrm, totPrm, minus, dur);
+  animateNumber(netPrm, gainPrm - totPrm, signed, dur);
 
   // Отрицательный результат подсвечивается — так честнее, чем прятать
-  netStd.classList.toggle("neg", gainStd - rentStd < 0);
-  netPrm.classList.toggle("neg", gainPrm - rentPrm < 0);
+  netStd.classList.toggle("neg", gainStd - totStd < 0);
+  netPrm.classList.toggle("neg", gainPrm - totPrm < 0);
+
+  // Подпись итога зависит от выбранного периода
+  const totalLabel = I18N[lang][period === "year" ? "calc.totalYear" : "calc.totalMonth"];
+  $$("[data-total-label]").forEach(el => { el.textContent = totalLabel; });
 }
 
 [sTables, sGuests, sCheck].forEach(inp => inp.addEventListener("input", () => recalc(false)));
@@ -596,11 +638,16 @@ $$("[data-season]").forEach(btn => {
    ================================================================= */
 function renderPrices(instant){
   const dur = instant || reduceMotion ? 0 : 400;
-  const std = subscriptionPrice(CONFIG.sampleDevices, season, "standard");
-  const prm = subscriptionPrice(CONFIG.sampleDevices, season, "premium");
-  animateNumber($("#priceStd"), std, money, dur);
-  animateNumber($("#pricePrm"), prm, money, dur);
+
+  // Абонплата за платформу
+  animateNumber($("#priceStd"), saasFee(season, "standard"), money, dur);
+  animateNumber($("#pricePrm"), saasFee(season, "premium"),  money, dur);
+
+  // Аренда одного устройства сверх бесплатных
+  animateNumber($("#devPriceStd"), devicePrice(season, "standard"), money, dur);
+  animateNumber($("#devPricePrm"), devicePrice(season, "premium"),  money, dur);
 }
+
 
 /* =================================================================
    8. ФОРМА ЗАЯВКИ И ОТПРАВКА ЧЕРЕЗ GOOGLE APPS SCRIPT
@@ -793,8 +840,12 @@ function calcSnapshot(){
     revenue: Math.round(revenue),
     addStd: Math.round(revenue * CONFIG.uplift.standard / 100),
     addPrm: Math.round(revenue * CONFIG.uplift.premium / 100),
-    costStd: Math.round(subscriptionPrice(tables, season, "standard")),
-    costPrm: Math.round(subscriptionPrice(tables, season, "premium")),
+    saasStd: Math.round(saasFee(season, "standard")),
+    saasPrm: Math.round(saasFee(season, "premium")),
+    devicesStd: Math.round(deviceFee(tables, season, "standard")),
+    devicesPrm: Math.round(deviceFee(tables, season, "premium")),
+    costStd: Math.round(totalFee(tables, season, "standard")),
+    costPrm: Math.round(totalFee(tables, season, "premium")),
     season, period
   };
 }

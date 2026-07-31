@@ -153,7 +153,7 @@
             <span data-i18n="calc.tables">Количество столиков</span>
             <output class="val num" id="oTables">10</output>
           </label>
-          <input type="range" id="sTables" min="5" max="50" step="1" value="10" aria-label="Количество столиков">
+          <input type="range" id="sTables" min="1" max="50" step="1" value="10" aria-label="Количество столиков">
         </div>
 
         <div class="field">
@@ -193,8 +193,10 @@
           <p class="res-cap" data-i18n="calc.gain">Прирост выручки</p>
           <p class="res-value num" id="rStd">+91 800 ฿</p>
           <div class="res-rows">
-            <p class="res-row"><span data-i18n="calc.rent">Абонентская плата</span><b class="num" id="costStd">−1 900 ฿</b></p>
-            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netStd">+89 900 ฿</b></p>
+            <p class="res-row"><span data-i18n="calc.saas">Абонентская плата (SaaS)</span><b class="num" id="saasStd">−1 900 ฿</b></p>
+            <p class="res-row"><span data-i18n="calc.devices">Аренда устройств</span><b class="num" id="devStd">−1 920 ฿</b></p>
+            <p class="res-row res-total"><span data-total-label>Итого в месяц</span><b class="num" id="costStd">−3 820 ฿</b></p>
+            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netStd">+87 980 ฿</b></p>
           </div>
         </div>
         <div class="res res-pro">
@@ -202,8 +204,10 @@
           <p class="res-cap" data-i18n="calc.gain">Прирост выручки</p>
           <p class="res-value num" id="rPrm">+229 500 ฿</p>
           <div class="res-rows">
-            <p class="res-row"><span data-i18n="calc.rent">Абонентская плата</span><b class="num" id="costPrm">−3 800 ฿</b></p>
-            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netPrm">+225 700 ฿</b></p>
+            <p class="res-row"><span data-i18n="calc.saas">Абонентская плата (SaaS)</span><b class="num" id="saasPrm">−3 800 ฿</b></p>
+            <p class="res-row"><span data-i18n="calc.devices">Аренда устройств</span><b class="num" id="devPrm">−3 840 ฿</b></p>
+            <p class="res-row res-total"><span data-total-label>Итого в месяц</span><b class="num" id="costPrm">−7 640 ฿</b></p>
+            <p class="res-row res-net"><span data-i18n="calc.net">Чистый результат</span><b class="num" id="netPrm">+221 860 ฿</b></p>
           </div>
         </div>
       </div>
@@ -268,7 +272,7 @@
     <header class="sec-head reveal">
       <p class="eyebrow" data-i18n="price.eyebrow">Тарифы</p>
       <h2 data-i18n="price.title">Два тарифа</h2>
-      <p class="sec-sub"><span data-i18n="price.subA">Абонентская плата уже включает</span> <span data-claim="included-devices">10</span> <span data-i18n="price.subB">устройств. Каждое сверх этого числа — отдельной доплатой.</span></p>
+      <p class="sec-sub" data-i18n="price.sub">Стоимость складывается из двух частей: абонентская плата за платформу и аренда устройств.</p>
       <div class="seg seg-season" role="group" aria-label="Сезон">
         <button type="button" class="seg-btn" data-season="low" data-i18n="price.low">Низкий сезон</button>
         <button type="button" class="seg-btn" data-season="high" data-i18n="price.high">Высокий сезон</button>
@@ -279,8 +283,9 @@
       <article class="plan reveal">
         <div class="plan-top">
           <h3 class="plan-name">Standard</h3>
+          <p class="plan-k" data-plan-k>SaaS</p>
           <p class="plan-price"><span class="num" id="priceStd">1 900 ฿</span><small><span data-i18n="price.per">в месяц</span></small></p>
-          <p class="plan-example"><span data-i18n="price.example">За ресторан с</span> <span data-claim="sample-devices">10</span> <span data-i18n="price.devicesWord">устройствами</span></p>
+          <p class="plan-example" data-i18n="price.saasNote">Абонентская плата за платформу</p>
         </div>
         <ul class="plan-list">
           <li data-i18n="price.s1">Аренда оборудования</li>
@@ -293,6 +298,11 @@
           <li data-i18n="price.s8">Аналитика</li>
           <li data-i18n="price.s9">Управление меню и контентом</li>
         </ul>
+        <div class="plan-devices">
+          <p class="plan-k" data-i18n="price.devicesK">Устройства</p>
+          <p class="plan-devices-free"><span data-claim="free-devices">2</span> <span data-i18n="price.freeDevices">устройства — бесплатно</span></p>
+          <p class="plan-devices-price"><span data-i18n="price.then">Далее</span> <b class="num" id="devPriceStd">240 ฿</b> <span data-i18n="price.perDevice">за устройство в месяц</span></p>
+        </div>
         <a class="btn btn-line plan-cta" href="#request" data-request-type="install" data-i18n="price.ctaStd">Заказать установку</a>
       </article>
 
@@ -300,21 +310,25 @@
         <span class="plan-badge" data-i18n="price.badge">Максимум прибыли</span>
         <div class="plan-top">
           <h3 class="plan-name">Premium</h3>
+          <p class="plan-k" data-plan-k>SaaS</p>
           <p class="plan-price"><span class="num" id="pricePrm">3 800 ฿</span><small><span data-i18n="price.per">в месяц</span></small></p>
+          <p class="plan-example" data-i18n="price.saasNote">Абонентская плата за платформу</p>
           <p class="plan-note" data-i18n="price.all">Всё из Standard, плюс:</p>
         </div>
         <ul class="plan-list">
           <li data-i18n="price.p1">Без рекламы сети JET MEDIA</li>
         </ul>
+        <div class="plan-devices">
+          <p class="plan-k" data-i18n="price.devicesK">Устройства</p>
+          <p class="plan-devices-free"><span data-claim="free-devices">2</span> <span data-i18n="price.freeDevices">устройства — бесплатно</span></p>
+          <p class="plan-devices-price"><span data-i18n="price.then">Далее</span> <b class="num" id="devPricePrm">480 ฿</b> <span data-i18n="price.perDevice">за устройство в месяц</span></p>
+        </div>
         <a class="btn btn-primary plan-cta" href="#request" data-request-type="demo" data-i18n="price.ctaPrm">Заказать демонстрацию</a>
       </article>
     </div>
 
     <p class="plans-note reveal">
-      <span data-i18n="price.extraA">Каждое устройство сверх включённых:</span>
-      <span data-claim="extra-low">240 ฿</span><span data-i18n="price.extraB">/мес в низкий сезон,</span>
-      <span data-claim="extra-high">590 ฿</span><span data-i18n="price.extraC">/мес в высокий.</span>
-      <span data-i18n="price.extraD">Первые</span> <span data-claim="trial-months">2</span> <span data-i18n="price.extraE">месяца — бесплатно, включая установку и обучение персонала.</span>
+      <span data-i18n="price.trialA">Первые</span> <span data-claim="trial-months">2</span> <span data-i18n="price.trialB">месяца — бесплатно, включая установку и обучение персонала.</span>
     </p>
   </div>
 </section>

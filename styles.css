@@ -318,6 +318,13 @@ input[type=range]::-moz-range-thumb{
   font-size:.78rem; color:var(--muted);
 }
 .res-row b{ font-size:.88rem; color:var(--text); white-space:nowrap; }
+.res-total{
+  margin-top:2px; padding-top:8px;
+  border-top:1px solid var(--line-soft);
+}
+.res-total span{ color:var(--text); }
+.res-total b{ color:var(--text); }
+.res-net{ padding-top:2px; }
 .res-net b{ color:var(--electric); }
 .res-net b.neg{ color:#FF8F9B; }
 
@@ -410,6 +417,20 @@ input[type=range]::-moz-range-thumb{
 .plan-price small{ display:flex; flex-direction:column; font-size:.76rem; color:var(--muted); }
 .plan-note{ margin-top:14px; font-size:.86rem; color:var(--electric); }
 .plan-example{ margin-top:10px; font-size:.8rem; color:var(--muted); }
+.plan-k{
+  font-family:var(--display); font-weight:800;
+  font-size:.68rem; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--electric); margin-top:16px;
+}
+
+/* Блок аренды устройств — вторая, независимая часть цены */
+.plan-devices{
+  padding-top:20px; border-top:1px solid var(--line-soft);
+}
+.plan-devices .plan-k{ margin-top:0; }
+.plan-devices-free{ margin-top:12px; font-size:.9rem; color:var(--text); }
+.plan-devices-price{ margin-top:6px; font-size:.88rem; color:var(--muted); }
+.plan-devices-price b{ color:var(--electric); font-weight:700; }
 .plan-list{ display:grid; gap:12px; }
 .plan-list li{ position:relative; padding-left:26px; font-size:.92rem; color:var(--muted); }
 .plan-list li::before{
